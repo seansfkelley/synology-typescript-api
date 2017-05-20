@@ -1,5 +1,5 @@
 {
-  "name": "synology-api",
+  "name": "synology-typescript-api",
   "version": "0.1.0",
   "description": "A Typescript implementation of a Promise-based API for the Synology DiskStation API.",
   "main": "lib/index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/seansfkelley/synology-api.git"
+    "url": "git+https://github.com/seansfkelley/synology-typescript-api.git"
   },
   "license": "MIT",
   "keywords": [

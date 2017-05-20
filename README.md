@@ -1,4 +1,4 @@
-# synology-api
+# synology-typescript-api
 
 > A Typescript implementation of a Promise-based API for the Synology DiskStation API.
 
