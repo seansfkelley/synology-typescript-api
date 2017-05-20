@@ -12,6 +12,16 @@
     "url": "git+https://github.com/seansfkelley/synology-api.git"
   },
   "license": "MIT",
+  "keywords": [
+    "synology",
+    "nas",
+    "diskstation",
+    "downloadstation",
+    "filestation",
+    "api",
+    "promise",
+    "typescript"
+  ],
   "dependencies": {
     "axios": "^0.16.1",
     "lodash-es": "^4.17.4",
