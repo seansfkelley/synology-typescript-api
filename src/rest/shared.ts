@@ -58,7 +58,9 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
     }
   });
 
-  formData.append('_sid', request.sid);
+  if (request.sid) {
+    formData.append('_sid', request.sid);
+  }
 
   Object.keys(request).forEach((k: keyof typeof request) => {
     const v = request[k];
