@@ -4,11 +4,16 @@
 
 ## Usage
 
-`synology-api` is published to npm as an ES6 module, so you'll have to use an environment or build tools that understand `import`/`export` statements. Supporting CommontJS is tracked by [#1](https://github.com/seansfkelley/synology-api/issues/1).
+`synology-typescript-api` is published to npm as an ES6 module, so you'll have to use an environment or build tools that understand `import`/`export` statements. Supporting CommontJS is tracked by [#1](https://github.com/seansfkelley/synology-api/issues/1).
 
 ### API Documentation
 
-`synology-api` is based off of the [official documentation for the DownloadStation API](https://global.download.synology.com/download/Document/DeveloperGuide/Synology_Download_Station_Web_API.pdf). The various REST API groups are exported under the (nested) names from the documentation.
+`synology-typescript-api` is based off the [official Synology API documentation](https://www.synology.com/en-us/support/developer#tool), specifically:
+
+- [DownloadStation](https://global.download.synology.com/download/Document/DeveloperGuide/Synology_Download_Station_Web_API.pdf)
+- [FileStation](https://global.download.synology.com/download/Document/DeveloperGuide/Synology_File_Station_API_Guide.pdf)
+
+The various REST API groups are exported under the (nested) names from the documentation.
 
 The behavior for the REST API is fully defined by the Typescript types, but please read the official documentation to understand the semantics/subtleties of the various API calls! In particular, you will want to check the documentation for the meanings of the various error codes.
 
@@ -17,7 +22,7 @@ The behavior for the REST API is fully defined by the Typescript types, but plea
 This snippet demonstrates a basic usage of the REST API to log in and fetch the list of DownloadStation tasks.
 
 ```ts
-import { Auth, DownloadStation } from 'synology-api';
+import { Auth, DownloadStation } from 'synology-typescript-api';
 
 const BASE_URL = 'path-to-your-diskstation';
 
@@ -45,7 +50,7 @@ In addition to the REST endpoints, a stateful class named `ApiClient` is exporte
 The following example has the same behavior as the REST API example.
 
 ```ts
-import { ApiClient, isConnectionFailure } from 'synology-api';
+import { ApiClient, isConnectionFailure } from 'synology-typescript-api';
 
 const client = new ApiClient({ ... });
 
