@@ -19,6 +19,7 @@ export type SynologyResponse<S> = {
   success: false;
   error: {
     code: number;
+    errors?: any[];
   };
 };
 
