@@ -156,21 +156,24 @@ export class ApiClient {
         .then(response => {
           if (this.settingsVersion === versionAtInit) {
             if (isConnectionFailure(response)) {
+              console.log('connection failure', response, this.sidPromise);
               return Promise.resolve(response);
             } else if (response.success) {
               return fn(this.settings.baseUrl!, response.data.sid, options)
                 .then(response => {
                   if (this.settingsVersion === versionAtInit) {
+                    console.log('valid response', response, this.sidPromise);
                     return response;
                   } else {
                     return wrappedFunction(options);
                   }
-                })
+                });
             } else {
               if (response.error.code === SESSION_TIMEOUT_ERROR_CODE) {
                 this.sidPromise = undefined;
                 return wrappedFunction(options);
               } else {
+                console.log('auth faiure', response, this.sidPromise);
                 return response;
               }
             }
