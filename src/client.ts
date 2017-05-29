@@ -3,6 +3,7 @@ import {
   Auth,
   AuthLoginResponse,
   DownloadStation,
+  FileStation,
   SynologyResponse,
   SessionName
 } from './rest';
@@ -198,6 +199,17 @@ export class ApiClient {
       Pause: this.proxy(DownloadStation.Task.Pause),
       Resume: this.proxy(DownloadStation.Task.Resume),
       Edit: this.proxy(DownloadStation.Task.Edit)
+    }
+  };
+
+  public FileStation = {
+    Info: {
+      get: this.proxy(FileStation.Info.get)
+    },
+    List: {
+      list_share: this.proxy(FileStation.List.list_share),
+      list: this.proxy(FileStation.List.list),
+      getinfo: this.proxy(FileStation.List.getinfo)
     }
   };
 }
