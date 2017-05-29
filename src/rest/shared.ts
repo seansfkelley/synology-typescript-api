@@ -2,7 +2,8 @@ import Axios from 'axios';
 import { stringify } from 'query-string';
 
 export const SessionName = {
-  DownloadStation: 'DownloadStation' as 'DownloadStation'
+  DownloadStation: 'DownloadStation' as 'DownloadStation',
+  FileStation: 'FileStation' as 'FileStation'
 };
 
 export type SessionName = keyof typeof SessionName;

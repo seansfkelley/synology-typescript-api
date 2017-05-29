@@ -59,6 +59,7 @@ export interface FileStationListListShareRequest {
 export interface FileStationSharedFolder {
   path: string;
   name: string;
+  isdir: true;
   additional?: {
     real_path?: string;
     size?: number;
