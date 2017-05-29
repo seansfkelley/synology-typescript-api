@@ -1,6 +1,12 @@
 import Axios from 'axios';
 import { stringify } from 'query-string';
 
+export const SessionName = {
+  DownloadStation: 'DownloadStation' as 'DownloadStation'
+};
+
+export type SessionName = keyof typeof SessionName;
+
 export interface SynologyFile {
   content: Blob;
   filename: string;
