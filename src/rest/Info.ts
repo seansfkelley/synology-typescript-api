@@ -1,5 +1,15 @@
-import { SynologyResponse, get } from './shared';
-import { InfoQueryRequest, InfoQueryResponse } from './InfoTypes';
+import { SynologyResponse, BaseRequest, get } from './shared';
+
+export interface InfoQueryRequest extends BaseRequest {
+  query: 'ALL' | string[];
+}
+
+export type InfoQueryResponse = Record<string, {
+  minVersion: number;
+  maxVersion: number;
+  path: string;
+  requestFormat: string;
+}>;
 
 const CGI_NAME = 'query';
 const API_NAME = 'SYNO.API.Info';
@@ -13,8 +23,6 @@ function Query(baseUrl: string, options: InfoQueryRequest): Promise<SynologyResp
     query: options.query === 'ALL' ? options.query : options.query.join(',')
   });
 }
-
-export * from './InfoTypes';
 
 export const Info = {
   API_NAME: API_NAME as typeof API_NAME,

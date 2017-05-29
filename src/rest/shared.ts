@@ -1,5 +1,3 @@
-// https://global.download.synology.com/download/Document/DeveloperGuide/Synology_Download_Station_Web_API.pdf
-
 import Axios from 'axios';
 import { stringify } from 'query-string';
 
@@ -75,4 +73,35 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
   return Axios.post(url, formData, { timeout: request.timeout || DEFAULT_TIMEOUT }).then(response => {
     return response.data;
   });
+}
+
+export class ApiBuilder {
+  constructor(private cgiName: string, private apiName: string) {}
+
+  makeGet<I extends BaseRequest, O>(methodName: string, preprocess?: (options: I) => object): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
+  makeGet<I extends BaseRequest, O>(methodName: string, preprocess: ((options?: I) => object) | undefined, optional: true): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
+
+  makeGet(methodName: string, preprocess?: (options: object) => object, _optional?: true) {
+    return this.makeApiRequest(get, methodName, preprocess);
+  }
+
+  makePost<I extends BaseRequest, O>(methodName: string, preprocess?: (options: I) => object): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
+  makePost<I extends BaseRequest, O>(methodName: string, preprocess: ((options?: I) => object) | undefined, optional: true): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
+
+  makePost(methodName: string, preprocess?: (options: object) => object, _optional?: true) {
+    return this.makeApiRequest(post, methodName, preprocess);
+  }
+
+  private makeApiRequest(method: (typeof get) | (typeof post), methodName: string, preprocess?: (options: object) => object) {
+    preprocess = preprocess || (o => o);
+    return (baseUrl: string, sid: string, options?: object) => {
+      return method(baseUrl, this.cgiName, {
+        ...preprocess!(options || {}),
+        api: this.apiName,
+        version: 1,
+        method: methodName,
+        sid
+      });
+    };
+  }
 }
