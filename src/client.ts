@@ -1,4 +1,4 @@
-import { isEqual, every, keys } from 'lodash-es';
+import { isEqual, every, keys, without } from 'lodash-es';
 import {
   Auth,
   AuthLoginResponse,
@@ -67,6 +67,7 @@ export class ApiClient {
   private sidPromise: Promise<SynologyResponse<AuthLoginResponse>> | undefined;
   private settingsVersion: number = 0;
   private loginAttemptVersion: number = 0;
+  private onSettingsChangeListeners: (() => void)[];
 
   constructor(private settings: ApiClientSettings) {}
 
@@ -79,6 +80,17 @@ export class ApiClient {
     } else {
       return false;
     }
+  }
+
+  public onSettingsChange(listener: () => void) {
+    this.onSettingsChangeListeners.push(listener);
+    let isSubscribed = true;
+    return () => {
+      if (isSubscribed) {
+        this.onSettingsChangeListeners = without(this.onSettingsChangeListeners, listener);
+        isSubscribed = false;
+      }
+    };
   }
 
   private isFullyConfigured() {
@@ -145,6 +157,9 @@ export class ApiClient {
     }
   };
 
+  private proxy<T, U>(fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
+  private proxy<T, U>(fn: (baseUrl: string, sid: string, options?: T) => Promise<SynologyResponse<U>>, optional: true): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
+
   private proxy<T, U>(fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>) {
     const wrappedFunction = (options: T): Promise<SynologyResponse<U> | ConnectionFailure> => {
       const versionAtInit = this.settingsVersion;
@@ -187,19 +202,19 @@ export class ApiClient {
 
   public DownloadStation = {
     Info: {
-      GetInfo: this.proxy(DownloadStation.Info.GetInfo),
-      GetConfig: this.proxy(DownloadStation.Info.GetConfig),
+      GetInfo: this.proxy(DownloadStation.Info.GetInfo, true),
+      GetConfig: this.proxy(DownloadStation.Info.GetConfig, true),
       SetServerConfig: this.proxy(DownloadStation.Info.SetServerConfig)
     },
     Schedule: {
-      GetConfig: this.proxy(DownloadStation.Schedule.GetConfig),
+      GetConfig: this.proxy(DownloadStation.Schedule.GetConfig, true),
       SetConfig: this.proxy(DownloadStation.Schedule.SetConfig)
     },
     Statistic: {
-      GetInfo: this.proxy(DownloadStation.Statistic.GetInfo)
+      GetInfo: this.proxy(DownloadStation.Statistic.GetInfo, true)
     },
     Task: {
-      List: this.proxy(DownloadStation.Task.List),
+      List: this.proxy(DownloadStation.Task.List, true),
       GetInfo: this.proxy(DownloadStation.Task.GetInfo),
       Create: this.proxy(DownloadStation.Task.Create),
       Delete: this.proxy(DownloadStation.Task.Delete),
@@ -214,7 +229,7 @@ export class ApiClient {
       get: this.proxy(FileStation.Info.get)
     },
     List: {
-      list_share: this.proxy(FileStation.List.list_share),
+      list_share: this.proxy(FileStation.List.list_share, true),
       list: this.proxy(FileStation.List.list),
       getinfo: this.proxy(FileStation.List.getinfo)
     }
