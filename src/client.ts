@@ -8,6 +8,13 @@ import {
   SessionName
 } from './rest';
 
+// Make the compiler shut up about inaccessible typings.
+import * as _unused_DownloadStation from './rest/DownloadStation';
+import * as _unused_FileStation from './rest/FileStation';
+{
+  let _: any; _ = _unused_DownloadStation; _ = _unused_FileStation;
+}
+
 import { BaseRequest } from './rest/shared';
 
 const SESSION_TIMEOUT_ERROR_CODE = 106;

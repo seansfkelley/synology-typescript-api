@@ -26,7 +26,7 @@ export interface DownloadStationInfoConfig {
 
 const infoBuilder = new ApiBuilder('DownloadStation/info', 'SYNO.DownloadStation.Info');
 
-export const Info = {
+const Info = {
   GetInfo: infoBuilder.makeGet<BaseRequest, DownloadStationInfoGetInfoResponse>('getinfo', undefined, true),
   GetConfig: infoBuilder.makeGet<BaseRequest, DownloadStationInfoConfig>('getconfig', undefined, true),
   SetServerConfig: infoBuilder.makeGet<Partial<DownloadStationInfoConfig> & BaseRequest, {}>('setserverconfig'),
@@ -43,7 +43,7 @@ export interface DownloadStationScheduleConfig {
 
 const scheduleBuilder = new ApiBuilder('DownloadStation/schedule', 'SYNO.DownloadStation.Schedule');
 
-export const Schedule = {
+const Schedule = {
   GetConfig: scheduleBuilder.makeGet<BaseRequest, DownloadStationScheduleConfig>('getconfig', undefined, true),
   SetConfig: scheduleBuilder.makeGet<Partial<DownloadStationScheduleConfig> & BaseRequest, {}>('setconfig'),
 };
@@ -61,7 +61,7 @@ export interface DownloadStationStatisticGetInfoResponse {
 
 const statisticsBuilder = new ApiBuilder('DownloadStation/statistic', 'SYNO.DownloadStation.Statistic');
 
-export const Statistic = {
+const Statistic = {
   GetInfo: statisticsBuilder.makeGet<BaseRequest, DownloadStationStatisticGetInfoResponse>('getinfo', undefined, true)
 };
 
@@ -275,7 +275,7 @@ function Task_Create(baseUrl: string, sid: string, options: DownloadStationTaskC
   }
 }
 
-export const Task = {
+const Task = {
   API_NAME: TASK_API_NAME as typeof TASK_API_NAME,
   List: taskBuilder.makeGet<DownloadStationTaskListRequest, DownloadStationTaskListResponse>(
     'list',
@@ -297,4 +297,15 @@ export const Task = {
   Edit: taskBuilder.makeGet<DownloadStationTaskEditRequest, DownloadStationTaskActionResponse>(
     'edit',
     o => ({ ...o, id: o.id.join(',') })),
+};
+
+// ------------------------------------------------------------------------- //
+//                                  exports                                  //
+// ------------------------------------------------------------------------- //
+
+export const DownloadStation = {
+  Info,
+  Schedule,
+  Statistic,
+  Task
 };

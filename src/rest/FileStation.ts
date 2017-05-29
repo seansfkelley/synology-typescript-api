@@ -13,7 +13,7 @@ export interface FileStationInfoGetResponse {
 
 const infoBuilder = new ApiBuilder('entry', 'SYNO.FileStation.Info');
 
-export const Info = {
+const Info = {
   get: infoBuilder.makeGet<BaseRequest, FileStationInfoGetResponse>('get')
 };
 
@@ -136,7 +136,7 @@ export interface FileStationListGetInfoResponse {
 
 const listBuilder = new ApiBuilder('entry', 'SYNO.FileStation.List');
 
-export const List = {
+const List = {
   list_share: listBuilder.makeGet<FileStationListListShareRequest, FileStationListListShareResponse>(
     'list_share',
     o => ({ ...o, additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined }),
@@ -149,4 +149,13 @@ export const List = {
     'getinfo',
     o => ({ ...o, path: o.path.join(','), additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined })
   )
+};
+
+// ------------------------------------------------------------------------- //
+//                                  exports                                  //
+// ------------------------------------------------------------------------- //
+
+export const FileStation = {
+  Info,
+  List
 };
