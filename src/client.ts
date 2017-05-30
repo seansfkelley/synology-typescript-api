@@ -67,7 +67,7 @@ export class ApiClient {
   private sidPromise: Promise<SynologyResponse<AuthLoginResponse>> | undefined;
   private settingsVersion: number = 0;
   private loginAttemptVersion: number = 0;
-  private onSettingsChangeListeners: (() => void)[];
+  private onSettingsChangeListeners: (() => void)[] = [];
 
   constructor(private settings: ApiClientSettings) {}
 
