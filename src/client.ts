@@ -66,7 +66,6 @@ export function isConnectionFailure(result: SynologyResponse<{}> | ConnectionFai
 export class ApiClient {
   private sidPromise: Promise<SynologyResponse<AuthLoginResponse>> | undefined;
   private settingsVersion: number = 0;
-  private loginAttemptVersion: number = 0;
   private onSettingsChangeListeners: (() => void)[] = [];
 
   constructor(private settings: ApiClientSettings) {}
@@ -105,7 +104,6 @@ export class ApiClient {
         };
         return Promise.resolve(failure);
       } else {
-        ++this.loginAttemptVersion;
         this.sidPromise = Auth.Login(this.settings.baseUrl!, {
           ...(request || {}),
           account: this.settings.account!,
