@@ -38,18 +38,16 @@ const SETTING_NAME_KEYS = keys(_settingNames) as (keyof ApiClientSettings)[];
 const TIMEOUT_MESSAGE_REGEX = /timeout of \d+ms exceeded/;
 
 function handleRejection(error: any): ConnectionFailure {
-  let failure: ConnectionFailure;
   if (error && error.response && error.response.status === 400) {
-    failure = { type: 'probable-wrong-protocol', error };
+    return { type: 'probable-wrong-protocol', error };
   } else if (error && error.message === 'Network Error') {
-    failure = { type: 'probable-wrong-url-or-no-connection', error };
+    return { type: 'probable-wrong-url-or-no-connection', error };
   } else if (error && TIMEOUT_MESSAGE_REGEX.test(error.message)) {
     // This is a best-effort which I expect to start silently falling back onto 'unknown error' at some point in the future.
-    failure = { type: 'timeout', error };
+    return { type: 'timeout', error };
   } else {
-    failure = { type: 'unknown', error };
+    return { type: 'unknown', error };
   }
-  return failure;
 }
 
 export type ConnectionFailure = {
