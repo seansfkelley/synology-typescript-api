@@ -14,7 +14,7 @@ export interface SynologyFile {
 }
 
 export function isFile(f?: any): f is SynologyFile {
-  return f && (f as SynologyFile).content instanceof Blob && (f as SynologyFile).filename != null;
+  return f && (f as SynologyFile).content != null && (f as SynologyFile).filename != null;
 }
 
 export type SynologyResponse<S> = {
