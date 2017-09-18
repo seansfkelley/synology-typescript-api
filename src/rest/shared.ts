@@ -8,13 +8,13 @@ export const SessionName = {
 
 export type SessionName = keyof typeof SessionName;
 
-export interface SynologyFile {
+export interface FormFile {
   content: Blob;
   filename: string;
 }
 
-export function isFile(f?: any): f is SynologyFile {
-  return f && (f as SynologyFile).content != null && (f as SynologyFile).filename != null;
+export function isFormFile(f?: any): f is FormFile {
+  return f && (f as FormFile).content != null && (f as FormFile).filename != null;
 }
 
 export type SynologyResponse<S> = {
@@ -59,7 +59,7 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
 
   Object.keys(request).forEach((k: keyof typeof request) => {
     const v = request[k];
-    if (k !== 'timeout' && v !== undefined && !isFile(v)) {
+    if (k !== 'timeout' && v !== undefined && !isFormFile(v)) {
       formData.append(k, v);
     }
   });
@@ -70,7 +70,7 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
 
   Object.keys(request).forEach((k: keyof typeof request) => {
     const v = request[k];
-    if (k !== 'timeout' && v !== undefined && isFile(v)) {
+    if (k !== 'timeout' && v !== undefined && isFormFile(v)) {
       formData.append(k, v.content, v.filename);
     }
   });

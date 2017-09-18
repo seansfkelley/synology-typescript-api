@@ -1,4 +1,4 @@
-import { ApiBuilder, BaseRequest, SynologyFile, SynologyResponse, get, post } from './shared';
+import { ApiBuilder, BaseRequest, FormFile, SynologyResponse, get, post } from './shared';
 
 // ------------------------------------------------------------------------- //
 //                                   Info                                    //
@@ -217,7 +217,7 @@ export interface DownloadStationTaskGetInfoResponse {
 
 export interface DownloadStationTaskCreateRequest extends BaseRequest {
   uri?: string[];
-  file?: SynologyFile;
+  file?: FormFile;
   username?: string;
   password?: string;
   unzip_password?: string;
