@@ -1,11 +1,11 @@
 machine:
   node:
-    version: 7.9.0
+    version: 8.9.0
 
 dependencies:
   pre:
-    - npm install yarn@0.21.3 -g
-    - yarn config set cache-folder /home/ubuntu/.cache/yarn
+    - npm install yarn@1.3.2 -g
+    - yarn config set cache-folder /home/ubuntu/.cache/yar
 
   override:
     - yarn install
