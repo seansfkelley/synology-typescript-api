@@ -15,7 +15,7 @@ import {
 import * as _unused_DownloadStation from './rest/DownloadStation';
 import * as _unused_FileStation from './rest/FileStation';
 {
-  let _: any; _ = _unused_DownloadStation; _ = _unused_FileStation;
+  let _: any; _ = _unused_DownloadStation; _ = _unused_FileStation; _ = _;
 }
 
 import { BaseRequest } from './rest/shared';

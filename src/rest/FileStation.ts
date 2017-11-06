@@ -47,7 +47,7 @@ export interface FileStationBasePerm {
   };
 }
 
-export interface FileStationListListShareRequest {
+export interface FileStationListListShareRequest extends BaseRequest {
   offset?: number;
   limit?: number;
   sort_by?: 'name' | 'user' | 'group' | 'mtime' | 'atime' | 'ctime' | 'crtime' | 'posix';
@@ -91,7 +91,7 @@ export interface FileStationListListShareResponse {
 
 export type FileStationFileAdditionalType = 'real_path' | 'size' | 'owner' | 'time' | 'perm' | 'mount_point_type' | 'type';
 
-export interface FileStationListListRequest {
+export interface FileStationListListRequest extends BaseRequest {
   folder_path: string;
   offset?: number;
   limit?: number;
@@ -126,7 +126,7 @@ export interface FileStationFileList {
   })[];
 }
 
-export interface FileStationListGetInfoRequest {
+export interface FileStationListGetInfoRequest extends BaseRequest {
   path: string[];
   additional?: FileStationFileAdditionalType[];
 }
