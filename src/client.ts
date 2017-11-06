@@ -1,4 +1,7 @@
-import { isEqual, every, keys, without } from 'lodash-es';
+import isEqual from 'lodash-es/isEqual';
+import every from 'lodash-es/every';
+import keys from 'lodash-es/keys';
+import without from 'lodash-es/without';
 import {
   Auth,
   AuthLoginResponse,
