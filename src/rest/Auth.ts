@@ -22,7 +22,7 @@ function Login(baseUrl: string, options: AuthLoginRequest): Promise<SynologyResp
   return get(baseUrl, CGI_NAME, {
     ...options,
     api: API_NAME,
-    version: 2,
+    version: 4,
     method: 'login',
     format: 'sid'
   });
