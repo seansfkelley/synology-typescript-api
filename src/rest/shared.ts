@@ -49,9 +49,13 @@ export function get<I extends SynologyApiRequest, O>(baseUrl: string, cgi: strin
     timeout: undefined
   })}`;
 
-  return Axios.get(url, { timeout: request.timeout || DEFAULT_TIMEOUT }).then(response => {
-    return response.data;
-  });
+  return Axios.get(url, {
+    timeout: request.timeout || DEFAULT_TIMEOUT,
+    withCredentials: false
+  })
+    .then(response => {
+      return response.data;
+    });
 }
 
 export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: string, request: I): Promise<SynologyResponse<O>> {
@@ -77,9 +81,13 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
 
   const url = `${baseUrl}/webapi/${cgi}.cgi`;
 
-  return Axios.post(url, formData, { timeout: request.timeout || DEFAULT_TIMEOUT }).then(response => {
-    return response.data;
-  });
+  return Axios.post(url, formData, {
+    timeout: request.timeout || DEFAULT_TIMEOUT,
+    withCredentials: false
+  })
+    .then(response => {
+      return response.data;
+    });
 }
 
 export class ApiBuilder {
