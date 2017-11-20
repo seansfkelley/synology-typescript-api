@@ -93,22 +93,56 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
 export class ApiBuilder {
   constructor(private cgiName: string, private apiName: string) {}
 
-  makeGet<I extends BaseRequest, O>(methodName: string, preprocess?: (options: I) => object): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
-  makeGet<I extends BaseRequest, O>(methodName: string, preprocess: ((options?: I) => object) | undefined, optional: true): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
+  makeGet<I extends BaseRequest, O>(
+    methodName: string,
+    preprocess?: (options: I) => object,
+    postprocess?: (response: O) => O
+  ): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
+  makeGet<I extends BaseRequest, O>(
+    methodName: string,
+    preprocess: ((options?: I) => object) | undefined,
+    postprocess: ((response: O) => O) | undefined,
+    optional: true
+  ): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
 
-  makeGet(methodName: string, preprocess?: (options: object) => object, _optional?: true) {
-    return this.makeApiRequest(get, methodName, preprocess);
+  makeGet(
+    methodName: string,
+    preprocess?: (options: object) => object,
+    postprocess?: (response: object) => object,
+    _optional?: true
+  ) {
+    return this.makeApiRequest(get, methodName, preprocess, postprocess);
   }
 
-  makePost<I extends BaseRequest, O>(methodName: string, preprocess?: (options: I) => object): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
-  makePost<I extends BaseRequest, O>(methodName: string, preprocess: ((options?: I) => object) | undefined, optional: true): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
+  makePost<I extends BaseRequest, O>(
+    methodName: string,
+    preprocess?: (options: I) => object,
+    postprocess?: (response: O) => O
+  ): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
+  makePost<I extends BaseRequest, O>(
+    methodName: string,
+    preprocess: ((options?: I) => object) | undefined,
+    postprocess: ((response: O) => O) | undefined,
+    optional: true
+  ): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
 
-  makePost(methodName: string, preprocess?: (options: object) => object, _optional?: true) {
-    return this.makeApiRequest(post, methodName, preprocess);
+  makePost(
+    methodName: string,
+    preprocess?: (options: object) => object,
+    postprocess?: (response: object) => object,
+    _optional?: true
+  ) {
+    return this.makeApiRequest(post, methodName, preprocess, postprocess);
   }
 
-  private makeApiRequest(method: (typeof get) | (typeof post), methodName: string, preprocess?: (options: object) => object) {
+  private makeApiRequest(
+    method: (typeof get) | (typeof post),
+    methodName: string,
+    preprocess?: (options: object) => object,
+    postprocess?: (response: object) => object,
+  ) {
     preprocess = preprocess || (o => o);
+    postprocess = postprocess || (r => r);
     return (baseUrl: string, sid: string, options?: object) => {
       return method(baseUrl, this.cgiName, {
         ...preprocess!(options || {}),
@@ -116,7 +150,14 @@ export class ApiBuilder {
         version: 1,
         method: methodName,
         sid
-      });
+      })
+        .then(response => {
+          if (response.success) {
+            return { ...response,  data: postprocess!(response.data) };
+          } else {
+            return response;
+          }
+        });
     };
   }
 }

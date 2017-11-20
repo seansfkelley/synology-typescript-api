@@ -27,8 +27,8 @@ export interface DownloadStationInfoConfig {
 const infoBuilder = new ApiBuilder('DownloadStation/info', 'SYNO.DownloadStation.Info');
 
 const Info = {
-  GetInfo: infoBuilder.makeGet<BaseRequest, DownloadStationInfoGetInfoResponse>('getinfo', undefined, true),
-  GetConfig: infoBuilder.makeGet<BaseRequest, DownloadStationInfoConfig>('getconfig', undefined, true),
+  GetInfo: infoBuilder.makeGet<BaseRequest, DownloadStationInfoGetInfoResponse>('getinfo', undefined, undefined, true),
+  GetConfig: infoBuilder.makeGet<BaseRequest, DownloadStationInfoConfig>('getconfig', undefined, undefined, true),
   SetServerConfig: infoBuilder.makeGet<Partial<DownloadStationInfoConfig> & BaseRequest, {}>('setserverconfig'),
 };
 
@@ -44,7 +44,7 @@ export interface DownloadStationScheduleConfig {
 const scheduleBuilder = new ApiBuilder('DownloadStation/schedule', 'SYNO.DownloadStation.Schedule');
 
 const Schedule = {
-  GetConfig: scheduleBuilder.makeGet<BaseRequest, DownloadStationScheduleConfig>('getconfig', undefined, true),
+  GetConfig: scheduleBuilder.makeGet<BaseRequest, DownloadStationScheduleConfig>('getconfig', undefined, undefined, true),
   SetConfig: scheduleBuilder.makeGet<Partial<DownloadStationScheduleConfig> & BaseRequest, {}>('setconfig'),
 };
 
@@ -62,7 +62,7 @@ export interface DownloadStationStatisticGetInfoResponse {
 const statisticsBuilder = new ApiBuilder('DownloadStation/statistic', 'SYNO.DownloadStation.Statistic');
 
 const Statistic = {
-  GetInfo: statisticsBuilder.makeGet<BaseRequest, DownloadStationStatisticGetInfoResponse>('getinfo', undefined, true)
+  GetInfo: statisticsBuilder.makeGet<BaseRequest, DownloadStationStatisticGetInfoResponse>('getinfo', undefined, undefined, true)
 };
 
 // ------------------------------------------------------------------------- //
@@ -114,7 +114,7 @@ export interface DownloadStationTaskPeer {
   agent: string;
   progress: number;
   speed_download: number;
-  speed_upload: string;
+  speed_upload: number;
 }
 
 export interface DownloadStationTaskTracker {
@@ -275,11 +275,78 @@ function Task_Create(baseUrl: string, sid: string, options: DownloadStationTaskC
   }
 }
 
+function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
+  function sideEffectCastNumbers<T extends object>(obj: T | null | undefined, keys: (keyof T)[]): void {
+    if (obj != null) {
+      keys.forEach(k => {
+        if (obj[k] != null) {
+          // We don't expect any of these values to be greater than Number.MAX_SAFE_INTEGER, so this is safe.
+          // If they are, so be it: you have a 9 quadrillion byte download, so you probably have other problems.
+          obj[k] = +obj[k];
+        }
+      });
+    }
+  }
+
+  const output = { ...task };
+  sideEffectCastNumbers(output, [ 'size' ]);
+  if (output.additional) {
+    sideEffectCastNumbers(output.additional.detail, [
+      'completed_time',
+      'connected_leechers',
+      'connected_peers',
+      'connected_seeders',
+      'create_time',
+      'seedelapsed',
+      'started_time',
+      'total_peers',
+      'total_pieces',
+      'waiting_seconds'
+    ]);
+    if (output.additional.file) {
+      output.additional.file.forEach(f => {
+        sideEffectCastNumbers(f, [
+          'index',
+          'size',
+          'size_downloaded'
+        ]);
+      });
+    }
+    if (output.additional.peer) {
+      output.additional.peer.forEach(p => {
+        sideEffectCastNumbers(p, [
+          'progress',
+          'speed_download',
+          'speed_upload'
+        ]);
+      });
+    }
+    if (output.additional.tracker) {
+      output.additional.tracker.forEach(t => {
+        sideEffectCastNumbers(t, [
+          'peers',
+          'seeds',
+          'update_timer'
+        ]);
+      });
+    }
+    sideEffectCastNumbers(output.additional.transfer, [
+      'downloaded_pieces',
+      'size_downloaded',
+      'size_uploaded',
+      'speed_download',
+      'speed_upload'
+    ]);
+  }
+  return output;
+}
+
 const Task = {
   API_NAME: TASK_API_NAME as typeof TASK_API_NAME,
   List: taskBuilder.makeGet<DownloadStationTaskListRequest, DownloadStationTaskListResponse>(
     'list',
     o => ({ ...o, additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined  }),
+    r => ({ ...r, tasks: (r.tasks || []).map(fixTaskNumericTypes) }),
     true),
   GetInfo: taskBuilder.makeGet<DownloadStationTaskGetInfoRequest, DownloadStationTaskGetInfoResponse>(
     'getinfo',

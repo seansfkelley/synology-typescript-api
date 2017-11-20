@@ -141,6 +141,7 @@ const List = {
   list_share: listBuilder.makeGet<FileStationListListShareRequest, FileStationListListShareResponse>(
     'list_share',
     o => ({ ...o, additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined }),
+    undefined,
     true),
   list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>(
     'list',
