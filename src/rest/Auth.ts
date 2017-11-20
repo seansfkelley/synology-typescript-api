@@ -7,6 +7,9 @@ export interface AuthLoginRequest extends BaseRequest {
   account: string;
   passwd: string;
   session: SessionName;
+  // 1: DSM < 6 compatibility, not recommended.
+  // 4: DSM 6+ version that doesn't erroneously send Set-Cookie headers.
+  version?: 1 | 4;
 }
 
 export interface AuthLoginResponse {
@@ -22,7 +25,7 @@ function Login(baseUrl: string, options: AuthLoginRequest): Promise<SynologyResp
   return get(baseUrl, CGI_NAME, {
     ...options,
     api: API_NAME,
-    version: 4,
+    version: options.version || 4,
     method: 'login',
     format: 'sid'
   });
