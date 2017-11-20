@@ -41,6 +41,7 @@ function Logout(baseUrl: string, options: AuthLogoutRequest): Promise<SynologyRe
 }
 
 export const Auth = {
+  API_NAME,
   Login,
   Logout
 };

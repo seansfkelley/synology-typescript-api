@@ -11,9 +11,11 @@ export interface FileStationInfoGetResponse {
   hostname: string;
 }
 
-const infoBuilder = new ApiBuilder('entry', 'SYNO.FileStation.Info');
+const INFO_API_NAME = 'SYNO.FileStation.Info';
+const infoBuilder = new ApiBuilder('entry', INFO_API_NAME);
 
 const Info = {
+  API_NAME: INFO_API_NAME as typeof INFO_API_NAME,
   get: infoBuilder.makeGet<BaseRequest, FileStationInfoGetResponse>('get')
 };
 
@@ -135,9 +137,11 @@ export interface FileStationListGetInfoResponse {
   files: FileStationFile[];
 }
 
-const listBuilder = new ApiBuilder('entry', 'SYNO.FileStation.List');
+const LIST_API_NAME = 'SYNO.FileStation.List';
+const listBuilder = new ApiBuilder('entry', LIST_API_NAME);
 
 const List = {
+  API_NAME: LIST_API_NAME as typeof LIST_API_NAME,
   list_share: listBuilder.makeGet<FileStationListListShareRequest, FileStationListListShareResponse>(
     'list_share',
     o => ({ ...o, additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined }),

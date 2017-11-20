@@ -25,5 +25,6 @@ function Query(baseUrl: string, options: InfoQueryRequest): Promise<SynologyResp
 }
 
 export const Info = {
+  API_NAME: API_NAME as typeof API_NAME,
   Query
 };

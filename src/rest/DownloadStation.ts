@@ -24,9 +24,11 @@ export interface DownloadStationInfoConfig {
   emule_default_destination: string;
 };
 
-const infoBuilder = new ApiBuilder('DownloadStation/info', 'SYNO.DownloadStation.Info');
+const INFO_API_NAME = 'SYNO.DownloadStation.Info';
+const infoBuilder = new ApiBuilder('DownloadStation/info', INFO_API_NAME);
 
 const Info = {
+  API_NAME: INFO_API_NAME as typeof INFO_API_NAME,
   GetInfo: infoBuilder.makeGet<BaseRequest, DownloadStationInfoGetInfoResponse>('getinfo', undefined, undefined, true),
   GetConfig: infoBuilder.makeGet<BaseRequest, DownloadStationInfoConfig>('getconfig', undefined, undefined, true),
   SetServerConfig: infoBuilder.makeGet<Partial<DownloadStationInfoConfig> & BaseRequest, {}>('setserverconfig'),
@@ -41,9 +43,11 @@ export interface DownloadStationScheduleConfig {
   emule_enabled: boolean;
 }
 
-const scheduleBuilder = new ApiBuilder('DownloadStation/schedule', 'SYNO.DownloadStation.Schedule');
+const SCHEDULE_API_NAME = 'SYNO.DownloadStation.Schedule';
+const scheduleBuilder = new ApiBuilder('DownloadStation/schedule', SCHEDULE_API_NAME);
 
 const Schedule = {
+  API_NAME: SCHEDULE_API_NAME as typeof SCHEDULE_API_NAME,
   GetConfig: scheduleBuilder.makeGet<BaseRequest, DownloadStationScheduleConfig>('getconfig', undefined, undefined, true),
   SetConfig: scheduleBuilder.makeGet<Partial<DownloadStationScheduleConfig> & BaseRequest, {}>('setconfig'),
 };
@@ -59,9 +63,11 @@ export interface DownloadStationStatisticGetInfoResponse {
   emule_speed_upload?: number;
 }
 
-const statisticsBuilder = new ApiBuilder('DownloadStation/statistic', 'SYNO.DownloadStation.Statistic');
+const STATISTIC_API_NAME = 'SYNO.DownloadStation.Statistic';
+const statisticsBuilder = new ApiBuilder('DownloadStation/statistic', STATISTIC_API_NAME);
 
 const Statistic = {
+  API_NAME: STATISTIC_API_NAME as typeof STATISTIC_API_NAME,
   GetInfo: statisticsBuilder.makeGet<BaseRequest, DownloadStationStatisticGetInfoResponse>('getinfo', undefined, undefined, true)
 };
 

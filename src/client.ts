@@ -1,12 +1,11 @@
 import isEqual from 'lodash-es/isEqual';
-import every from 'lodash-es/every';
-import keys from 'lodash-es/keys';
 import without from 'lodash-es/without';
 import {
   Auth,
   AuthLoginResponse,
   DownloadStation,
   FileStation,
+  Info,
   SynologyResponse,
   SessionName
 } from './rest';
@@ -22,6 +21,15 @@ import { BaseRequest } from './rest/shared';
 
 const SESSION_TIMEOUT_ERROR_CODE = 106;
 
+export interface ExtraLoginInfo {
+  extra: {
+    // If we're using version 1 of the login API for compatibility reasons, we will get Set-Cookie headers that we
+    // don't want, which will override the existing login session in the normal browing space. We should warn our
+    // callers about this!
+    isLegacyLogin: boolean;
+  };
+}
+
 export interface ApiClientSettings {
   baseUrl?: string;
   account?: string;
@@ -34,14 +42,13 @@ const _settingNames: Record<keyof ApiClientSettings, true> = {
   'account': true,
   'passwd': true,
   'session': true
-}
+};
 
-const SETTING_NAME_KEYS = keys(_settingNames) as (keyof ApiClientSettings)[];
+const SETTING_NAME_KEYS = Object.keys(_settingNames) as (keyof ApiClientSettings)[];
 
 const TIMEOUT_MESSAGE_REGEX = /timeout of \d+ms exceeded/;
 
 function handleRejection(error: any): ConnectionFailure {
-  debugger;
   if (error && error.response && error.response.status === 400) {
     return { type: 'probable-wrong-protocol', error };
   } else if (error && error.message === 'Network Error') {
@@ -66,7 +73,7 @@ export function isConnectionFailure(result: SynologyResponse<{}> | ConnectionFai
 }
 
 export class ApiClient {
-  private sidPromise: Promise<SynologyResponse<AuthLoginResponse>> | undefined;
+  private sidPromise: Promise<SynologyResponse<AuthLoginResponse & ExtraLoginInfo>> | undefined;
   private settingsVersion: number = 0;
   private onSettingsChangeListeners: (() => void)[] = [];
 
@@ -95,10 +102,13 @@ export class ApiClient {
   }
 
   private isFullyConfigured() {
-    return every(SETTING_NAME_KEYS, k => this.settings[k] != null && this.settings[k]!.length > 0);
+    return SETTING_NAME_KEYS.every(k => {
+      const v = this.settings[k];
+      return v != null && v.length > 0;
+    });
   }
 
-  private maybeLogin = (request?: BaseRequest): Promise<SynologyResponse<AuthLoginResponse> | ConnectionFailure> => {
+  private maybeLogin = (request?: BaseRequest): Promise<SynologyResponse<AuthLoginResponse & ExtraLoginInfo>| ConnectionFailure> => {
     if (!this.sidPromise) {
       if (!this.isFullyConfigured()) {
         const failure: ConnectionFailure = {
@@ -106,12 +116,34 @@ export class ApiClient {
         };
         return Promise.resolve(failure);
       } else {
-        this.sidPromise = Auth.Login(this.settings.baseUrl!, {
-          ...(request || {}),
-          account: this.settings.account!,
-          passwd: this.settings.passwd!,
-          session: this.settings.session!
-        });
+        this.sidPromise = Info.Query(this.settings.baseUrl!, { query: [ Auth.API_NAME ] })
+          .then(apiVersions => {
+            const authApiVersion: 1 | 4 = apiVersions.success && apiVersions.data[Auth.API_NAME].maxVersion >= 4
+              ? 4
+              : 1;
+            return Auth.Login(this.settings.baseUrl!, {
+              ...(request || {}),
+              account: this.settings.account!,
+              passwd: this.settings.passwd!,
+              session: this.settings.session!,
+              version: authApiVersion,
+            })
+              .then(response => {
+                if (response.success) {
+                  return {
+                    ...response,
+                    data: {
+                      ...response.data,
+                      extra: {
+                        isLegacyLogin: authApiVersion === 1
+                      }
+                    }
+                  };
+                } else {
+                  return response;
+                }
+              });
+          })
         return this.sidPromise.catch(handleRejection);
       }
     } else {
