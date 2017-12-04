@@ -116,16 +116,17 @@ export class ApiClient {
         };
         return Promise.resolve(failure);
       } else {
-        this.sidPromise = Info.Query(this.settings.baseUrl!, { query: [ Auth.API_NAME ] })
+        const cachedSettings = this.settings;
+        this.sidPromise = Info.Query(cachedSettings.baseUrl!, { query: [ Auth.API_NAME ] })
           .then(apiVersions => {
             const authApiVersion: 1 | 4 = apiVersions.success && apiVersions.data[Auth.API_NAME].maxVersion >= 4
               ? 4
               : 1;
-            return Auth.Login(this.settings.baseUrl!, {
+            return Auth.Login(cachedSettings.baseUrl!, {
               ...(request || {}),
-              account: this.settings.account!,
-              passwd: this.settings.passwd!,
-              session: this.settings.session!,
+              account: cachedSettings.account!,
+              passwd: cachedSettings.passwd!,
+              session: cachedSettings.session!,
               version: authApiVersion,
             })
               .then(response => {
