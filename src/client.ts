@@ -1,5 +1,3 @@
-import isEqual from 'lodash-es/isEqual';
-import without from 'lodash-es/without';
 import {
   Auth,
   AuthLoginResponse,
@@ -80,7 +78,7 @@ export class ApiClient {
   constructor(private settings: ApiClientSettings) {}
 
   public updateSettings(settings: ApiClientSettings) {
-    if (!isEqual(this.settings, settings)) {
+    if (settings != null && (this.settings == null || SETTING_NAME_KEYS.some(k => settings[k] !== this.settings[k]))) {
       this.settingsVersion++;
       this.settings = settings;
       this.maybeLogout();
@@ -95,7 +93,7 @@ export class ApiClient {
     let isSubscribed = true;
     return () => {
       if (isSubscribed) {
-        this.onSettingsChangeListeners = without(this.onSettingsChangeListeners, listener);
+        this.onSettingsChangeListeners = this.onSettingsChangeListeners.filter(l => l !== listener);
         isSubscribed = false;
       }
     };
