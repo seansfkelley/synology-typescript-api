@@ -17,6 +17,7 @@ import * as _unused_FileStation from './rest/FileStation';
 
 import { BaseRequest } from './rest/shared';
 
+const NO_PERMISSIONS_ERROR_CODE = 105;
 const SESSION_TIMEOUT_ERROR_CODE = 106;
 
 export interface ExtraLoginInfo {
@@ -39,7 +40,7 @@ const _settingNames: Record<keyof ApiClientSettings, true> = {
   'baseUrl': true,
   'account': true,
   'passwd': true,
-  'session': true
+  'session': true,
 };
 
 const SETTING_NAME_KEYS = Object.keys(_settingNames) as (keyof ApiClientSettings)[];
@@ -64,7 +65,7 @@ export type ConnectionFailure = {
 } | {
   type: 'probable-wrong-protocol' | 'probable-wrong-url-or-no-connection-or-cert-error' | 'timeout' | 'unknown';
   error: any;
-}
+};
 
 export function isConnectionFailure(result: SynologyResponse<{}> | ConnectionFailure): result is ConnectionFailure {
   return (result as ConnectionFailure).type != null && (result as SynologyResponse<{}>).success == null;
@@ -192,7 +193,7 @@ export class ApiClient {
   private proxy<T, U>(fn: (baseUrl: string, sid: string, options?: T) => Promise<SynologyResponse<U>>, optional: true): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
 
   private proxy<T, U>(fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>) {
-    const wrappedFunction = (options: T): Promise<SynologyResponse<U> | ConnectionFailure> => {
+    const wrappedFunction = (options: T, shouldRetry: boolean = true): Promise<SynologyResponse<U> | ConnectionFailure> => {
       const versionAtInit = this.settingsVersion;
       return this.maybeLogin()
         .then(response => {
@@ -209,9 +210,9 @@ export class ApiClient {
                   }
                 })
             } else {
-              if (response.error.code === SESSION_TIMEOUT_ERROR_CODE) {
+              if (shouldRetry && (response.error.code === SESSION_TIMEOUT_ERROR_CODE || response.error.code === NO_PERMISSIONS_ERROR_CODE)) {
                 this.sidPromise = undefined;
-                return wrappedFunction(options);
+                return wrappedFunction(options, false);
               } else {
                 return response;
               }
@@ -228,21 +229,21 @@ export class ApiClient {
 
   public Auth = {
     Login: this.maybeLogin,
-    Logout: this.maybeLogout
+    Logout: this.maybeLogout,
   };
 
   public DownloadStation = {
     Info: {
       GetInfo: this.proxy(DownloadStation.Info.GetInfo, true),
       GetConfig: this.proxy(DownloadStation.Info.GetConfig, true),
-      SetServerConfig: this.proxy(DownloadStation.Info.SetServerConfig)
+      SetServerConfig: this.proxy(DownloadStation.Info.SetServerConfig),
     },
     Schedule: {
       GetConfig: this.proxy(DownloadStation.Schedule.GetConfig, true),
-      SetConfig: this.proxy(DownloadStation.Schedule.SetConfig)
+      SetConfig: this.proxy(DownloadStation.Schedule.SetConfig),
     },
     Statistic: {
-      GetInfo: this.proxy(DownloadStation.Statistic.GetInfo, true)
+      GetInfo: this.proxy(DownloadStation.Statistic.GetInfo, true),
     },
     Task: {
       List: this.proxy(DownloadStation.Task.List, true),
@@ -251,18 +252,18 @@ export class ApiClient {
       Delete: this.proxy(DownloadStation.Task.Delete),
       Pause: this.proxy(DownloadStation.Task.Pause),
       Resume: this.proxy(DownloadStation.Task.Resume),
-      Edit: this.proxy(DownloadStation.Task.Edit)
+      Edit: this.proxy(DownloadStation.Task.Edit),
     }
   };
 
   public FileStation = {
     Info: {
-      get: this.proxy(FileStation.Info.get)
+      get: this.proxy(FileStation.Info.get),
     },
     List: {
       list_share: this.proxy(FileStation.List.list_share, true),
       list: this.proxy(FileStation.List.list),
-      getinfo: this.proxy(FileStation.List.getinfo)
+      getinfo: this.proxy(FileStation.List.getinfo),
     }
   };
 }
