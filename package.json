@@ -1,6 +1,6 @@
 {
   "name": "synology-typescript-api",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "A Typescript implementation of a Promise-based API for the Synology DiskStation API.",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
