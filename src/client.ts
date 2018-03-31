@@ -5,17 +5,19 @@ import {
   FileStation,
   Info,
   SynologyResponse,
-  SessionName
+  SessionName,
+  SynologyFailureResponse,
 } from './rest';
+import { BaseRequest } from './rest/shared';
 
-// Make the compiler shut up about inaccessible typings.
+// Make the compiler shut up about inaccessible or unused typings that I actually need for declarations.
 import * as _unused_DownloadStation from './rest/DownloadStation';
 import * as _unused_FileStation from './rest/FileStation';
+import { SynologySuccessResponse } from './rest';
 {
-  let _: any; _ = _unused_DownloadStation; _ = _unused_FileStation; _ = _;
+  let _1: any; _1 = _unused_DownloadStation; _1 = _unused_FileStation; _1 = _1;
+  let _2: SynologySuccessResponse<any> = null as any; _2 = _2;
 }
-
-import { BaseRequest } from './rest/shared';
 
 const NO_PERMISSIONS_ERROR_CODE = 105;
 const SESSION_TIMEOUT_ERROR_CODE = 106;
@@ -192,33 +194,56 @@ export class ApiClient {
   private proxy<T, U>(fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
   private proxy<T, U>(fn: (baseUrl: string, sid: string, options?: T) => Promise<SynologyResponse<U>>, optional: true): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
 
+  // This function is a doozy. Thank goodness for Typescript.
   private proxy<T, U>(fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>) {
-    const wrappedFunction = (options: T, shouldRetry: boolean = true): Promise<SynologyResponse<U> | ConnectionFailure> => {
+    const wrappedFunction = (options: T, shouldRetryRoutineFailures: boolean = true): Promise<SynologyResponse<U> | ConnectionFailure> => {
       const versionAtInit = this.settingsVersion;
+
+      const settingsStillValid = () => {
+        return this.settingsVersion === versionAtInit;
+      };
+
+      const unconditionallyRetry = () => {
+        return wrappedFunction(options);
+      };
+
+      const retryIfAllowed = (response: SynologyFailureResponse) => {
+        if (shouldRetryRoutineFailures && (response.error.code === SESSION_TIMEOUT_ERROR_CODE || response.error.code === NO_PERMISSIONS_ERROR_CODE)) {
+          this.sidPromise = undefined;
+          return wrappedFunction(options, false);
+        } else {
+          return response;
+        }
+      };
+
+      // This can't really be unnested or broken into functions in a more-readable way. The recursive implementation
+      // handling out-of-date settings breaks the abstraction provided by a series of .then, because if we ever hit
+      // that branch we want to stop all further processing along the current line and defer entirely to that call.
+      // Thus, if we flatten into a series .then, we will always run through successive .then and may end up making
+      // several requests needlessly.
       return this.maybeLogin()
         .then(response => {
-          if (this.settingsVersion === versionAtInit) {
+          if (settingsStillValid()) {
             if (isConnectionFailure(response)) {
-              return Promise.resolve(response);
+              return response;
             } else if (response.success) {
               return fn(this.settings.baseUrl!, response.data.sid, options)
                 .then(response => {
-                  if (this.settingsVersion === versionAtInit) {
-                    return response;
+                  if (settingsStillValid()) {
+                    if (isConnectionFailure(response) || response.success) {
+                      return response;
+                    } else {
+                      return retryIfAllowed(response);
+                    }
                   } else {
-                    return wrappedFunction(options);
+                    return unconditionallyRetry();
                   }
-                })
+                });
             } else {
-              if (shouldRetry && (response.error.code === SESSION_TIMEOUT_ERROR_CODE || response.error.code === NO_PERMISSIONS_ERROR_CODE)) {
-                this.sidPromise = undefined;
-                return wrappedFunction(options, false);
-              } else {
-                return response;
-              }
+              return retryIfAllowed(response);
             }
           } else {
-            return wrappedFunction(options);
+            return unconditionallyRetry();
           }
         })
         .catch(handleRejection);

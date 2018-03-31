@@ -17,16 +17,20 @@ export function isFormFile(f?: any): f is FormFile {
   return f && (f as FormFile).content != null && (f as FormFile).filename != null;
 }
 
-export type SynologyResponse<S> = {
+export interface SynologySuccessResponse<S> {
   success: true;
   data: S;
-} | {
+}
+
+export interface SynologyFailureResponse {
   success: false;
   error: {
     code: number;
     errors?: any[];
   };
-};
+}
+
+export type SynologyResponse<S> = SynologySuccessResponse<S> | SynologyFailureResponse;
 
 export interface BaseRequest {
   timeout?: number;
