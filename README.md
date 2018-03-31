@@ -4,7 +4,7 @@
 
 ## Usage
 
-`synology-typescript-api` is published to npm as an ES6 module, so you'll have to use an environment or build tools that understand `import`/`export` statements. Supporting CommontJS is tracked by [#1](https://github.com/seansfkelley/synology-api/issues/1).
+`synology-typescript-api` is published to npm as an ES6 module, so you'll have to use an environment or build tools that understand `import`/`export` statements.
 
 ### API Documentation
 
@@ -45,9 +45,13 @@ Auth.login(BASE_URL, { ... })
 
 ### API Client Example
 
-In addition to the REST endpoints, a stateful class named `ApiClient` is exported for convenience. This class will automatically keep the session alive and catches several common failure modes and reports them in a more-useful manner. The various APIs are accessible as (nested) properties on the instance.
+In addition to the REST endpoints, a stateful class named `ApiClient` is exported for convenience. This class will:
 
-The following example has the same behavior as the REST API example.
+- keep the session alive by attemping to re-login when necessary
+- prevent common permissions failures caused by old sessions or rebooted NASes by automatically retrying
+- report some common failure modes, such as connection errors, in a more-useful manner
+
+The various APIs are accessible as (nested) properties on the instance. The following example has the same behavior as the REST API example.
 
 ```ts
 import { ApiClient, isConnectionFailure } from 'synology-typescript-api';
