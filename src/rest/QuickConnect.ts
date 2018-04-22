@@ -118,38 +118,9 @@ function pingPong(dsmHost: string): Promise<PingPongResponse> {
     .then(response => response.data);
 }
 
-// Adapted from the quickconnect.to javascript.
-function isValidServerInfo(info: QuickConnectServerInfo) {
-  return (
-    info.errno === 0 &&
-    !!info.server &&
-    !!info.server.interface &&
-    !!info.server.external &&
-    !!info.server.external.ip &&
-    !!info.server.serverID &&
-    !!info.service &&
-    !!info.service.port &&
-    !!info.service.ext_port &&
-    !!info.env &&
-    !!info.env.control_host &&
-    !!info.env.relay_region
-  );
-}
-
-// Adapted from the quickconnect.to javascript.
-function hasTunnel(info: QuickConnectServerInfo) {
-  return (
-    !!info.service &&
-    !!info.service.relay_ip &&
-    !!info.service.relay_port
-  );
-}
-
 export const QuickConnect = {
   getControlList,
   getServerInfo,
   requestTunnel,
-  isValidServerInfo,
-  hasTunnel,
   pingPong,
 };

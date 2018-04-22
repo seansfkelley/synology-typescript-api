@@ -1,3 +1,3 @@
 export * from './rest';
 export * from './client';
-export * from './quickconnectOperations';
+export * from './quickconnect';

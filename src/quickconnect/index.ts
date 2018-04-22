@@ -1,8 +1,38 @@
-import { QuickConnect, QuickConnectServerInfo } from './rest';
+// This entire file is adapted from the quickconnect.to minified javascript.
+// Many of the weird-seeming functions (like isValidServerInfo, which doesn't
+// even type narrow) are adapted with minimal semantic changes.
+
+import { QuickConnect, QuickConnectServerInfo } from '../rest';
 import { isPrivate, isLoopback, isIpv4, isIpv6 } from './ips';
+import { series } from './promises';
 import * as MD5 from 'md5.js'; // TODO: Types.
 
 type Protocol = 'http' | 'https';
+
+function isValidServerInfo(info: QuickConnectServerInfo) {
+  return (
+    info.errno === 0 &&
+    !!info.server &&
+    !!info.server.interface &&
+    !!info.server.external &&
+    !!info.server.external.ip &&
+    !!info.server.serverID &&
+    !!info.service &&
+    !!info.service.port &&
+    !!info.service.ext_port &&
+    !!info.env &&
+    !!info.env.control_host &&
+    !!info.env.relay_region
+  );
+}
+
+function hasTunnel(info: QuickConnectServerInfo) {
+  return (
+    !!info.service &&
+    !!info.service.relay_ip &&
+    !!info.service.relay_port
+  );
+}
 
 const PROTOCOL_PORTS: Record<Protocol, number> = {
   'http': 80,
@@ -105,7 +135,7 @@ function generatePingPongCandidates(quickConnectId: string, info: QuickConnectSe
     }
   }
 
-  if (QuickConnect.hasTunnel(info)) {
+  if (hasTunnel(info)) {
     candidates[ConnectionType.TUN].push({ address: `${quickConnectId}.${info.env.relay_region!}.quickconnect.to` });
   }
 
@@ -117,7 +147,7 @@ function tryControlHost(controlHost: string, quickConnectId: string, protocol: P
     .then(result => {
       if ('errinfo' in result) {
         throw new Error(result.errinfo);
-      } else if (!QuickConnect.isValidServerInfo(result)) {
+      } else if (!isValidServerInfo(result)) {
         throw new Error(`server info returned is invalid!`);
       } else {
         const candidates = generatePingPongCandidates(quickConnectId, result);
@@ -129,50 +159,29 @@ function tryControlHost(controlHost: string, quickConnectId: string, protocol: P
             return `${address}:${candidate.port || PROTOCOL_PORTS[protocol]}`;
           })
         }));
-        const md5Id: string = new MD5().update(result.server.serverID!).digest('hex');
+        const serverIdHash: string = new MD5().update(result.server.serverID!).digest('hex');
 
-        let pingPongThunks = formattedCandidateAddresses.map(address => () => QuickConnect.pingPong(address));
-
-        function tryPingPong(): Promise<string> {
-          if (pingPongThunks.length === 0) {
-            return Promise.reject('no pings resulted in success');
-          } else {
-            return pingPongThunks.shift()!()
-              .then(result => {
-                // if is error result do things
-                if (result.success && result.ezid === md5Id) {
-                  return // the hostname, which we've lost now...
-                } else {
-                  return tryPingPong();
-                }
-              })
-              .catch(() => tryPingPong());
-          }
-        }
-
-        return tryPingPong()
+        return series(formattedCandidateAddresses, address => {
+          return QuickConnect.pingPong(address)
+            .then(result => {
+              if (result.success && result.ezid === serverIdHash) {
+                return address;
+              } else {
+                throw new Error(`failed to get response from candidate address or ezid failed validation`);
+              }
+            });
+        });
       }
     });
 }
 
-export function resolveQuickConnectId(quickConnectId: string, protocol: Protocol): Promise<string> {
+export function resolveQuickConnectId(quickConnectId: string, protocol: 'http' | 'https'): Promise<string> {
   return QuickConnect.getControlList()
     .then(controlHosts => {
-      let hostThunks = controlHosts.map(controlHost => () => tryControlHost(controlHost, quickConnectId, protocol));
-
-      function tryHost(): Promise<string> {
-        if (hostThunks.length === 0) {
-          return Promise.reject('no control hosts could provide a reachable DSM');
-        } else {
-          return hostThunks.shift()!()
-            .then(result => {
-              // if is error result do things
-              return result;
-            })
-            .catch(() => tryHost());
-        }
-      }
-
-      return tryHost();
+      return series(controlHosts, controlHost =>
+        // TODO: It probably returns a non-rejected promise with error information. Turn that
+        // into a rejection so we don't inadvertently return it to the caller.
+        tryControlHost(controlHost, quickConnectId, protocol)
+      );
     });
 }
