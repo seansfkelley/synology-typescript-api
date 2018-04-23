@@ -24,7 +24,7 @@ function getControlList(): Promise<string[]> { // Not sure what the return type 
     version: 1,
     command: 'get_site_list',
   }, REQUEST_CONFIG)
-    .then(response => response.data);
+    .then(response => response.data.sites);
 }
 
 // Note that because this protocol is reverse-engineered, this interface may be incomplete.
@@ -113,8 +113,13 @@ export interface PingPongResponse {
   success: boolean;
 }
 
-function pingPong(dsmHost: string): Promise<PingPongResponse> {
-  return Axios.get(`https://${dsmHost}/webman/pingpong.cgi?action=cors`)
+function pingPong(urlRoot: string, quickConnectId: string): Promise<PingPongResponse> {
+  return Axios.get(`${urlRoot}/webman/pingpong.cgi?action=cors`, {
+    headers: {
+      // It appears that this header is necessary to get it to actually respond!
+      'Referer': `https://${quickConnectId}.quickconnect.to`,
+    },
+  })
     .then(response => response.data);
 }
 
