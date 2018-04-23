@@ -36,7 +36,7 @@ export interface QuickConnectServerInfo {
   command: string;
   server: {
     ddns?: 'NULL' | string;
-    ds_state: string;
+    ds_state: 'OFFLINE' | 'STANDBY' | 'BOOTING' | 'HIBERNATION' | 'CONNECTED'; // Possibly also 'DISCONNECTED'?
     serverID?: string;
     gateway: string;
     interface?: {
@@ -67,7 +67,7 @@ export interface QuickConnectServerInfo {
     port?: number | string;
     relay_dualstack?: string;
     https_port?: string;
-    pingpong?: string;
+    pingpong?: 'CONNECTED' | 'DISCONNECTED';
     relay_dn?: string;
     relay_port?: number;
   };
