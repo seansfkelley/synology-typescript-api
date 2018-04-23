@@ -34,32 +34,32 @@ export type SynologyResponse<S> = SynologySuccessResponse<S> | SynologyFailureRe
 
 export interface BaseRequest {
   timeout?: number;
+  referer?: string; // This header is necessary for tunnelling.
 }
 
-export interface SynologyApiRequest {
+export interface SynologyApiRequest extends BaseRequest {
   api: string;
   version: number;
   method: string;
   sid?: string;
-  timeout?: number;
 }
 
-const DEFAULT_TIMEOUT = 60000;
+export const DEFAULT_TIMEOUT = 60000;
 
 export function get<I extends SynologyApiRequest, O>(baseUrl: string, cgi: string, request: I): Promise<SynologyResponse<O>> {
   const url = `${baseUrl}/webapi/${cgi}.cgi?${stringify({
     ...(request as object),
     _sid: request.sid,
-    timeout: undefined
+    timeout: undefined,
+    referer: undefined,
   })}`;
 
   return Axios.get(url, {
     timeout: request.timeout || DEFAULT_TIMEOUT,
-    withCredentials: false
+    withCredentials: false,
+    headers: request.referer ? { 'Referer': request.referer } : {},
   })
-    .then(response => {
-      return response.data;
-    });
+    .then(response => response.data);
 }
 
 export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: string, request: I): Promise<SynologyResponse<O>> {
@@ -67,7 +67,7 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
 
   Object.keys(request).forEach((k: keyof typeof request) => {
     const v = request[k];
-    if (k !== 'timeout' && v !== undefined && !isFormFile(v)) {
+    if (k !== 'timeout' && k !== 'referer' && v !== undefined && !isFormFile(v)) {
       if (typeof v === 'string' || typeof v === 'number') {
         formData.append(k, (v as (string | number)).toString());
       } else {
@@ -82,7 +82,7 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
 
   Object.keys(request).forEach((k: keyof typeof request) => {
     const v = request[k];
-    if (k !== 'timeout' && v !== undefined && isFormFile(v)) {
+    if (k !== 'timeout' && k !== 'referer' && v !== undefined && isFormFile(v)) {
       formData.append(k, v.content, v.filename);
     }
   });
@@ -91,11 +91,10 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
 
   return Axios.post(url, formData, {
     timeout: request.timeout || DEFAULT_TIMEOUT,
-    withCredentials: false
+    withCredentials: false,
+    headers: request.referer ? { 'Referer': request.referer } : {},
   })
-    .then(response => {
-      return response.data;
-    });
+    .then(response => response.data);
 }
 
 export class ApiBuilder {

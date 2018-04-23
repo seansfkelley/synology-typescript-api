@@ -1,4 +1,5 @@
-import { QuickConnect, QuickConnectServerInfo } from '../rest';
+import { QuickConnect, QuickConnectServerInfo, constructQuickConnectReferer } from './api';
+import { pingPong } from '../rest';
 import { isPrivate, isLoopback, isIpv4, isIpv6 } from './ips';
 import { series } from './promises';
 import * as md5 from 'md5';
@@ -67,7 +68,7 @@ function shouldCheckExtPort(extPort: number | string | undefined, port: number) 
 }
 
 // This is an adaptation of what quickconnect.to refers to as "addCase".
-function generateConnectionCandidates(quickConnectId: string, defaultPort: number, info: QuickConnectServerInfo, tunnel: QuickConnectTunnelRequest): Record<ConnectionType, ConnectionInfo[]> {
+function generateConnectionCandidates(quickConnectId: string, defaultPort: number, info: QuickConnectServerInfo, tunnel: QuickConnectTunnelRequest): ConnectionInfo[] {
   let candidates: Record<ConnectionType, ConnectionInfo[]> = {} as any;
   Object.keys(ConnectionType).forEach((connectionType: ConnectionType) => {
     candidates[connectionType] = [];
@@ -132,14 +133,12 @@ function generateConnectionCandidates(quickConnectId: string, defaultPort: numbe
     });
   }
 
-  PREFERRED_CONNECTION_ORDERING.forEach(connectionType => {
-    candidates[connectionType] = candidates[connectionType].map(({ hostname, port }) => ({
+  return ([] as ConnectionInfo[]).concat(...PREFERRED_CONNECTION_ORDERING.map(connectionType => {
+    return candidates[connectionType].map(({ hostname, port }) => ({
       hostname: isIpv6(hostname) && !isIpv4(hostname) ? `[${hostname}]` : hostname,
       port,
     }))
-  });
-
-  return candidates;
+  }));
 }
 
 export function tryResolveFromControlHost(controlHost: string, quickConnectId: string, protocol: 'http' | 'https', tunnel: QuickConnectTunnelRequest): Promise<{ hostname: string; port: number; }> {
@@ -151,13 +150,13 @@ export function tryResolveFromControlHost(controlHost: string, quickConnectId: s
       } else if (!isValidServerInfo(result)) {
         throw new Error(`server info returned is invalid!`);
       } else {
-        const candidates = generateConnectionCandidates(quickConnectId, PROTOCOL_PORTS[protocol], result, tunnel);
-        const formattedConnections = ([] as ConnectionInfo[])
-          .concat(...PREFERRED_CONNECTION_ORDERING.map(ConnectionType => candidates[ConnectionType]));
+        const connections = generateConnectionCandidates(quickConnectId, PROTOCOL_PORTS[protocol], result, tunnel);
         const serverIdHash: string = md5(result.server.serverID!);
 
-        return series(formattedConnections, connection => {
-          return QuickConnect.pingPong(`${protocol}://${connection.hostname}:${connection.port}`, quickConnectId)
+        return series(connections, connection => {
+          return pingPong(`${protocol}://${connection.hostname}:${connection.port}`, {
+            referer: constructQuickConnectReferer(quickConnectId, protocol),
+          })
             .then(result => {
               if (!result.success) {
                 throw new Error('unsuccessful response from candidate connection');

@@ -8,10 +8,7 @@ const DSM_PROTOCOL: Record<Protocol, DsmPortal> = {
   'https': 'dsm_portal_https',
 };
 
-const REQUEST_CONFIG = {
-  timeout: 5000,
-  withCredentials: false,
-};
+const DEFAULT_TIMEOUT = 5000;
 
 const GLOBAL_CONTROL_SERVER = 'global.quickconnect.to';
 
@@ -19,11 +16,14 @@ function servPath(host: string) {
   return `https://${host}/Serv.php`;
 }
 
-function getControlList(): Promise<string[]> { // Not sure what the return type here actually is...
+function getControlList(timeout: number = DEFAULT_TIMEOUT): Promise<string[]> { // Not sure what the return type here actually is...
   return Axios.post(servPath(GLOBAL_CONTROL_SERVER), {
     version: 1,
     command: 'get_site_list',
-  }, REQUEST_CONFIG)
+  }, {
+    timeout,
+    withCredentials: false,
+  })
     .then(response => response.data.sites);
 }
 
@@ -86,46 +86,38 @@ export interface QuickConnectErrorResponse {
   version: number;
 }
 
-function getServerInfo(controlHost: string, quickConnectId: string, protocol: Protocol): Promise<QuickConnectServerInfo | QuickConnectErrorResponse> {
+function getServerInfo(controlHost: string, quickConnectId: string, protocol: Protocol, timeout: number = DEFAULT_TIMEOUT): Promise<QuickConnectServerInfo | QuickConnectErrorResponse> {
   return Axios.post(servPath(controlHost), {
     version: 1,
     command: 'get_server_info',
     id: DSM_PROTOCOL[protocol],
     serverID: quickConnectId,
-  }, REQUEST_CONFIG)
+  }, {
+    timeout,
+    withCredentials: false,
+  })
     .then(response => response.data);
 }
 
-function requestTunnel(controlHost: string, quickConnectId: string, protocol: Protocol): Promise<QuickConnectServerInfo | QuickConnectErrorResponse> {
+function requestTunnel(controlHost: string, quickConnectId: string, protocol: Protocol, timeout: number = DEFAULT_TIMEOUT): Promise<QuickConnectServerInfo | QuickConnectErrorResponse> {
   return Axios.post(servPath(controlHost), {
     version: 1,
     command: 'request_tunnel',
     id: DSM_PROTOCOL[protocol],
     serverID: quickConnectId,
-  }, REQUEST_CONFIG)
-    .then(response => response.data);
-}
-
-export interface PingPongResponse {
-  boot_done: boolean;
-  disk_hibernation: boolean;
-  ezid: string;
-  success: boolean;
-}
-
-function pingPong(urlRoot: string, quickConnectId: string): Promise<PingPongResponse> {
-  return Axios.get(`${urlRoot}/webman/pingpong.cgi?action=cors`, {
-    headers: {
-      // It appears that this header is necessary to get it to actually respond!
-      'Referer': `https://${quickConnectId}.quickconnect.to`,
-    },
+  }, {
+    timeout,
+    withCredentials: false,
   })
     .then(response => response.data);
+}
+
+export function constructQuickConnectReferer(quickConnectId: string, protocol: 'http' | 'https') {
+  return `${protocol}://${quickConnectId}.quickconnect.to`;
 }
 
 export const QuickConnect = {
   getControlList,
   getServerInfo,
   requestTunnel,
-  pingPong,
 };

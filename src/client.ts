@@ -9,6 +9,7 @@ import {
   SynologyFailureResponse,
 } from './rest';
 import { BaseRequest } from './rest/shared';
+// import { resolveQuickConnectId } from './quickconnect';
 
 // Make the compiler shut up about inaccessible or unused typings that I actually need for declarations.
 import * as _unused_DownloadStation from './rest/DownloadStation';
