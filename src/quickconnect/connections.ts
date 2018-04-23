@@ -4,7 +4,7 @@ import { series } from './promises';
 import * as md5 from 'md5';
 
 export type QuickConnectTunnelRequest = 'exclude' | 'include' | 'require';
-export interface ResolvedConnectionInfo {
+export interface ConnectionInfo {
   hostname: string;
   port: number;
 }
@@ -66,14 +66,9 @@ function shouldCheckExtPort(extPort: number | string | undefined, port: number) 
   return extPort != null && extPort !== 0 && extPort !== '0' && !isNaN(+extPort) && +extPort !== port;
 }
 
-interface PingPongCandidate {
-  hostname: string;
-  port?: number;
-}
-
 // This is an adaptation of what quickconnect.to refers to as "addCase".
-function generatePingPongCandidates(quickConnectId: string, info: QuickConnectServerInfo, tunnel: QuickConnectTunnelRequest): Record<ConnectionType, PingPongCandidate[]> {
-  let candidates: Record<ConnectionType, PingPongCandidate[]> = {} as any;
+function generateConnectionCandidates(quickConnectId: string, defaultPort: number, info: QuickConnectServerInfo, tunnel: QuickConnectTunnelRequest): Record<ConnectionType, ConnectionInfo[]> {
+  let candidates: Record<ConnectionType, ConnectionInfo[]> = {} as any;
   Object.keys(ConnectionType).forEach((connectionType: ConnectionType) => {
     candidates[connectionType] = [];
   });
@@ -131,15 +126,24 @@ function generatePingPongCandidates(quickConnectId: string, info: QuickConnectSe
   }
 
   if (hasTunnel(info) && (tunnel === 'require' || tunnel === 'include')) {
-    candidates[ConnectionType.TUN].push({ hostname: `${quickConnectId}.${info.env.relay_region!}.quickconnect.to` });
+    candidates[ConnectionType.TUN].push({
+      hostname: `${quickConnectId}.${info.env.relay_region!}.quickconnect.to`,
+      port: defaultPort,
+    });
   }
+
+  PREFERRED_CONNECTION_ORDERING.forEach(connectionType => {
+    candidates[connectionType] = candidates[connectionType].map(({ hostname, port }) => ({
+      hostname: isIpv6(hostname) && !isIpv4(hostname) ? `[${hostname}]` : hostname,
+      port,
+    }))
+  });
 
   return candidates;
 }
 
-
-export function tryControlHost(controlHost: string, quickConnectId: string, protocol: 'http' | 'https', tunnel: QuickConnectTunnelRequest): Promise<{ hostname: string; port: number; }> {
-  // Requesting a tunnel seems to be a superset of the regular "get server info" call.
+export function tryResolveFromControlHost(controlHost: string, quickConnectId: string, protocol: 'http' | 'https', tunnel: QuickConnectTunnelRequest): Promise<{ hostname: string; port: number; }> {
+  // Requesting a tunnel seems to be a superset of the regular "get server info" call. Do it unconditionally.
   return QuickConnect.requestTunnel(controlHost, quickConnectId, protocol)
     .then(result => {
       if ('errinfo' in result) {
@@ -147,23 +151,20 @@ export function tryControlHost(controlHost: string, quickConnectId: string, prot
       } else if (!isValidServerInfo(result)) {
         throw new Error(`server info returned is invalid!`);
       } else {
-        const candidates = generatePingPongCandidates(quickConnectId, result, tunnel);
-        const formattedConnections = ([] as { hostname: string; port: number; }[])
-          .concat(...PREFERRED_CONNECTION_ORDERING.map(ConnectionType =>
-            candidates[ConnectionType].map(({ hostname, port }) => ({
-              hostname: isIpv6(hostname) && !isIpv4(hostname) ? `[${hostname}]` : hostname,
-              port: port || PROTOCOL_PORTS[protocol],
-            }))
-          ));
+        const candidates = generateConnectionCandidates(quickConnectId, PROTOCOL_PORTS[protocol], result, tunnel);
+        const formattedConnections = ([] as ConnectionInfo[])
+          .concat(...PREFERRED_CONNECTION_ORDERING.map(ConnectionType => candidates[ConnectionType]));
         const serverIdHash: string = md5(result.server.serverID!);
 
         return series(formattedConnections, connection => {
           return QuickConnect.pingPong(`${protocol}://${connection.hostname}:${connection.port}`, quickConnectId)
             .then(result => {
-              if (result.success && result.ezid === serverIdHash) {
-                return connection;
+              if (!result.success) {
+                throw new Error('unsuccessful response from candidate connection');
+              } else if (result.ezid !== serverIdHash) {
+                throw new Error('pingpong response has incorrect ezid');
               } else {
-                throw new Error(`failed to get response from candidate address or ezid failed validation`);
+                return connection;
               }
             });
         });
