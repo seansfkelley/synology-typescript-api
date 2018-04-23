@@ -30,8 +30,8 @@
     "query-string": "^4.3.4"
   },
   "devDependencies": {
-    "@types/query-string": "^4.3.1",
     "@types/md5": "^2.1.32",
-    "typescript": "^2.6.1"
+    "@types/query-string": "^4.3.1",
+    "typescript": "^2.8.3"
   }
 }

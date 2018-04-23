@@ -288,7 +288,7 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
         if (obj[k] != null) {
           // We don't expect any of these values to be greater than Number.MAX_SAFE_INTEGER, so this is safe.
           // If they are, so be it: you have a 9 quadrillion byte download, so you probably have other problems.
-          obj[k] = +obj[k];
+          obj[k] = +obj[k] as any;
         }
       });
     }

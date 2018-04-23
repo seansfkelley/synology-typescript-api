@@ -68,7 +68,11 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
   Object.keys(request).forEach((k: keyof typeof request) => {
     const v = request[k];
     if (k !== 'timeout' && v !== undefined && !isFormFile(v)) {
-      formData.append(k, v);
+      if (typeof v === 'string' || typeof v === 'number') {
+        formData.append(k, (v as (string | number)).toString());
+      } else {
+        throw new Error(`cannot POST value of illegal type: ${v}`);
+      }
     }
   });
 
