@@ -69,6 +69,7 @@ function shouldCheckExtPort(extPort: number | string | undefined, port: number) 
 
 // This is an adaptation of what quickconnect.to refers to as "addCase".
 function generateConnectionCandidates(quickConnectId: string, defaultPort: number, info: QuickConnectServerInfo, tunnel: QuickConnectTunnelRequest): ConnectionInfo[] {
+  // tslint:disable-next-line:prefer-const
   let candidates: Record<ConnectionType, ConnectionInfo[]> = {} as any;
   Object.keys(ConnectionType).forEach((connectionType: ConnectionType) => {
     candidates[connectionType] = [];

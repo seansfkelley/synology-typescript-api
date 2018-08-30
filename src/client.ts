@@ -39,11 +39,12 @@ export interface ApiClientSettings {
   session?: SessionName;
 }
 
+// tslint:disable-next-line:variable-name
 const _settingNames: Record<keyof ApiClientSettings, true> = {
-  'baseUrl': true,
-  'account': true,
-  'passwd': true,
-  'session': true,
+  baseUrl: true,
+  account: true,
+  passwd: true,
+  session: true,
 };
 
 const SETTING_NAME_KEYS = Object.keys(_settingNames) as (keyof ApiClientSettings)[];

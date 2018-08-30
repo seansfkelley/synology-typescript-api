@@ -92,7 +92,7 @@ export function post<I extends SynologyApiRequest, O>(baseUrl: string, cgi: stri
   return Axios.post(url, formData, {
     timeout: request.timeout || DEFAULT_TIMEOUT,
     withCredentials: false,
-    headers: request.referer ? { 'Referer': request.referer } : {},
+    headers: request.referer ? { "Referer": request.referer } : {},
   })
     .then(response => response.data);
 }

@@ -22,7 +22,7 @@ export interface DownloadStationInfoConfig {
   unzip_service_enabled: number;
   default_destination: string;
   emule_default_destination: string;
-};
+}
 
 const INFO_API_NAME = 'SYNO.DownloadStation.Info';
 const infoBuilder = new ApiBuilder('DownloadStation/info', INFO_API_NAME);

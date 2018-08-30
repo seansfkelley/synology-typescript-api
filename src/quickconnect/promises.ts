@@ -4,6 +4,7 @@ export function series<T, U>(values: T[], makePromise: (value: T) => Promise<U>,
       ? Promise.reject('no values were given for series')
       : Promise.resolve(defaultValue);
   } else {
+    // tslint:disable-next-line:prefer-const
     let mutableValues = [ ...values ];
 
     function iterate(): Promise<U> {
@@ -11,8 +12,7 @@ export function series<T, U>(values: T[], makePromise: (value: T) => Promise<U>,
       return makePromise(value)
         .catch(e => mutableValues.length > 0
           ? iterate()
-          : Promise.reject(e)
-        );
+          : Promise.reject(e));
     }
 
     return iterate();
