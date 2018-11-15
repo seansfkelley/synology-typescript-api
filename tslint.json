@@ -1,0 +1,30 @@
+{
+    "defaultSeverity": "error",
+    "rules": {
+        "prefer-const": true,
+        "member-access": true,
+        "no-import-side-effect": true,
+        "no-parameter-reassignment": true,
+        "curly": true,
+        "no-implicit-dependencies": true,
+        "no-inferred-empty-object-type": true,
+        "prefer-conditional-expression": true,
+        "triple-equals": [true,
+            "allow-null-check",
+            "allow-undefined-check"
+        ],
+        "no-default-export": true,
+        "trailing-comma": [true, {
+            "multiline": {
+                "arrays": "always",
+                "objects": "always",
+                "functions": "always",
+                "imports": "always",
+                "exports": "always",
+                "typeLiterals": "always"
+            }
+        }],
+        "quotemark": [true, "double", "jsx-double"],
+        "semicolon": [true, "always"]
+    }
+}

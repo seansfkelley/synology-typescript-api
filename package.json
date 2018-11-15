@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "scripts": {
-    "test": "tsc",
+    "test": "tslint --project . && tsc",
     "prepublish": "tsc"
   },
   "repository": {
@@ -25,10 +25,13 @@
   ],
   "dependencies": {
     "axios": "^0.16.1",
+    "md5": "^2.2.1",
     "query-string": "^4.3.4"
   },
   "devDependencies": {
+    "@types/md5": "^2.1.32",
     "@types/query-string": "^4.3.1",
-    "typescript": "^2.6.1"
+    "tslint": "^5.9.1",
+    "typescript": "^2.8.3"
   }
 }

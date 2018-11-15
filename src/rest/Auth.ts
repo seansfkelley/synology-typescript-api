@@ -27,7 +27,7 @@ function Login(baseUrl: string, options: AuthLoginRequest): Promise<SynologyResp
     api: API_NAME,
     version: options.version || 4,
     method: 'login',
-    format: 'sid'
+    format: 'sid',
   });
 }
 
@@ -43,5 +43,5 @@ function Logout(baseUrl: string, options: AuthLogoutRequest): Promise<SynologyRe
 export const Auth = {
   API_NAME,
   Login,
-  Logout
+  Logout,
 };
