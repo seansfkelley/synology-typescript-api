@@ -1,0 +1,57 @@
+version: 2
+
+defaults: &defaults
+  working_directory: ~/synology-typescript-api
+  docker:
+    - image: circleci/node:8.9.0
+
+jobs:
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+            - yarn-packages-
+      - run:
+          name: yarn-install
+          command: yarn install --frozen-lockfile
+      - save_cache:
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - run:
+          name: test
+          command: npm test
+      - persist_to_workspace:
+          root: ~/synology-typescript-api
+          paths: .
+  deploy:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/synology-typescript-api
+      - run:
+          name: create-npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/synology-typescript-api/.npmrc
+      - run:
+          name: publish
+          command: npm publish
+
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+      - deploy:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
