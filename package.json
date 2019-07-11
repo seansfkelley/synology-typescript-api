@@ -24,7 +24,7 @@
     "typescript"
   ],
   "dependencies": {
-    "axios": "^0.16.1",
+    "axios": "^0.18.1",
     "query-string": "^4.3.4"
   },
   "devDependencies": {
