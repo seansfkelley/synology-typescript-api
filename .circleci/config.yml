@@ -15,14 +15,14 @@ jobs:
             - yarn-packages-{{ checksum "yarn.lock" }}
             - yarn-packages-
       - run:
-          name: yarn-install
+          name: Yarn Install
           command: yarn install --frozen-lockfile
       - save_cache:
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
       - run:
-          name: test
+          name: Test
           command: npm test
       - persist_to_workspace:
           root: ~/synology-typescript-api
@@ -33,10 +33,10 @@ jobs:
       - attach_workspace:
           at: ~/synology-typescript-api
       - run:
-          name: create-npmrc
+          name: Create npmrc
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/synology-typescript-api/.npmrc
       - run:
-          name: publish
+          name: Publish
           command: npm publish
 
 workflows:
