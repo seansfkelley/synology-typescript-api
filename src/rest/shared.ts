@@ -2,8 +2,8 @@ import Axios from "axios";
 import { stringify } from "query-string";
 
 export const SessionName = {
-  DownloadStation: "DownloadStation" as "DownloadStation",
-  FileStation: "FileStation" as "FileStation"
+  DownloadStation: "DownloadStation" as const,
+  FileStation: "FileStation" as const
 };
 
 export type SessionName = keyof typeof SessionName;
@@ -46,17 +46,18 @@ export interface SynologyApiRequest {
   method: string;
   sid?: string;
   timeout?: number;
+  [key: string]: string | number | FormFile | undefined;
 }
 
 const DEFAULT_TIMEOUT = 60000;
 
-export function get<I extends SynologyApiRequest, O>(
+export function get<O extends object>(
   baseUrl: string,
   cgi: string,
-  request: I
+  request: SynologyApiRequest
 ): Promise<SynologyResponse<O>> {
   const url = `${baseUrl}/webapi/${cgi}.cgi?${stringify({
-    ...(request as object),
+    ...request,
     _sid: request.sid,
     timeout: undefined
   })}`;
@@ -69,17 +70,18 @@ export function get<I extends SynologyApiRequest, O>(
   });
 }
 
-export function post<I extends SynologyApiRequest, O>(
+export function post<O extends object>(
   baseUrl: string,
   cgi: string,
-  request: I
+  request: SynologyApiRequest
 ): Promise<SynologyResponse<O>> {
   const formData = new FormData();
 
-  Object.keys(request).forEach((k: keyof typeof request) => {
+  Object.keys(request).forEach(k => {
     const v = request[k];
     if (k !== "timeout" && v !== undefined && !isFormFile(v)) {
-      formData.append(k, v);
+      // String() !== new String(). This produces lowercase-s strings, not capital-S Strings.
+      formData.append(k, String(v));
     }
   });
 
@@ -87,7 +89,7 @@ export function post<I extends SynologyApiRequest, O>(
     formData.append("_sid", request.sid);
   }
 
-  Object.keys(request).forEach((k: keyof typeof request) => {
+  Object.keys(request).forEach(k => {
     const v = request[k];
     if (k !== "timeout" && v !== undefined && isFormFile(v)) {
       formData.append(k, v.content, v.filename);

@@ -220,7 +220,7 @@ export class ApiClient {
           .catch(handleRejection);
       }
     } else {
-      return Promise.resolve("not-logged-in" as "not-logged-in");
+      return Promise.resolve("not-logged-in" as const);
     }
   };
 
