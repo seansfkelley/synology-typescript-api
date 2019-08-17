@@ -24,11 +24,11 @@ export interface DownloadStationInfoConfig {
   emule_default_destination: string;
 }
 
-const INFO_API_NAME = "SYNO.DownloadStation.Info";
+const INFO_API_NAME = "SYNO.DownloadStation.Info" as const;
 const infoBuilder = new ApiBuilder("DownloadStation/info", INFO_API_NAME);
 
 const Info = {
-  API_NAME: INFO_API_NAME as typeof INFO_API_NAME,
+  API_NAME: INFO_API_NAME,
   GetInfo: infoBuilder.makeGet<BaseRequest, DownloadStationInfoGetInfoResponse>(
     "getinfo",
     undefined,
@@ -55,11 +55,11 @@ export interface DownloadStationScheduleConfig {
   emule_enabled: boolean;
 }
 
-const SCHEDULE_API_NAME = "SYNO.DownloadStation.Schedule";
+const SCHEDULE_API_NAME = "SYNO.DownloadStation.Schedule" as const;
 const scheduleBuilder = new ApiBuilder("DownloadStation/schedule", SCHEDULE_API_NAME);
 
 const Schedule = {
-  API_NAME: SCHEDULE_API_NAME as typeof SCHEDULE_API_NAME,
+  API_NAME: SCHEDULE_API_NAME,
   GetConfig: scheduleBuilder.makeGet<BaseRequest, DownloadStationScheduleConfig>(
     "getconfig",
     undefined,
@@ -82,11 +82,11 @@ export interface DownloadStationStatisticGetInfoResponse {
   emule_speed_upload?: number;
 }
 
-const STATISTIC_API_NAME = "SYNO.DownloadStation.Statistic";
+const STATISTIC_API_NAME = "SYNO.DownloadStation.Statistic" as const;
 const statisticsBuilder = new ApiBuilder("DownloadStation/statistic", STATISTIC_API_NAME);
 
 const Statistic = {
-  API_NAME: STATISTIC_API_NAME as typeof STATISTIC_API_NAME,
+  API_NAME: STATISTIC_API_NAME,
   GetInfo: statisticsBuilder.makeGet<BaseRequest, DownloadStationStatisticGetInfoResponse>(
     "getinfo",
     undefined,
@@ -277,8 +277,8 @@ export interface DownloadStationTaskEditRequest extends BaseRequest {
   destination?: string;
 }
 
-const TASK_CGI_NAME = "DownloadStation/task";
-const TASK_API_NAME = "SYNO.DownloadStation.Task";
+const TASK_CGI_NAME = "DownloadStation/task" as const;
+const TASK_API_NAME = "SYNO.DownloadStation.Task" as const;
 
 const taskBuilder = new ApiBuilder(TASK_CGI_NAME, TASK_API_NAME);
 
@@ -371,7 +371,7 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
 }
 
 const Task = {
-  API_NAME: TASK_API_NAME as typeof TASK_API_NAME,
+  API_NAME: TASK_API_NAME,
   List: taskBuilder.makeGet<DownloadStationTaskListRequest, DownloadStationTaskListResponse>(
     "list",
     o => ({

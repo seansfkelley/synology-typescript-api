@@ -162,11 +162,11 @@ export interface FileStationListGetInfoResponse {
   files: FileStationFile[];
 }
 
-const LIST_API_NAME = "SYNO.FileStation.List";
-const listBuilder = new ApiBuilder("entry", LIST_API_NAME);
+const API_NAME = "SYNO.FileStation.List" as const;
+const listBuilder = new ApiBuilder("entry", API_NAME);
 
 const List = {
-  API_NAME: LIST_API_NAME as typeof LIST_API_NAME,
+  API_NAME,
   list_share: listBuilder.makeGet<
     FileStationListListShareRequest,
     FileStationListListShareResponse

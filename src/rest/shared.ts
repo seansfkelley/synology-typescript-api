@@ -47,7 +47,7 @@ export interface SynologyApiRequest {
 
 const DEFAULT_TIMEOUT = 60000;
 
-export function get<O extends object>(
+export async function get<O extends object>(
   baseUrl: string,
   cgi: string,
   request: SynologyApiRequest
@@ -58,15 +58,13 @@ export function get<O extends object>(
     timeout: undefined,
   })}`;
 
-  return Axios.get(url, {
+  return (await Axios.get(url, {
     timeout: request.timeout || DEFAULT_TIMEOUT,
     withCredentials: false,
-  }).then(response => {
-    return response.data;
-  });
+  })).data;
 }
 
-export function post<O extends object>(
+export async function post<O extends object>(
   baseUrl: string,
   cgi: string,
   request: SynologyApiRequest
@@ -94,12 +92,10 @@ export function post<O extends object>(
 
   const url = `${baseUrl}/webapi/${cgi}.cgi`;
 
-  return Axios.post(url, formData, {
+  return (await Axios.post(url, formData, {
     timeout: request.timeout || DEFAULT_TIMEOUT,
     withCredentials: false,
-  }).then(response => {
-    return response.data;
-  });
+  })).data;
 }
 
 export class ApiBuilder {
@@ -155,20 +151,19 @@ export class ApiBuilder {
   ) {
     preprocess = preprocess || (o => o);
     postprocess = postprocess || (r => r);
-    return (baseUrl: string, sid: string, options?: object) => {
-      return method(baseUrl, this.cgiName, {
+    return async (baseUrl: string, sid: string, options?: object) => {
+      const response = await method(baseUrl, this.cgiName, {
         ...preprocess!(options || {}),
         api: this.apiName,
         version: 1,
         method: methodName,
         sid,
-      }).then(response => {
-        if (response.success) {
-          return { ...response, data: postprocess!(response.data) };
-        } else {
-          return response;
-        }
       });
+      if (response.success) {
+        return { ...response, data: postprocess!(response.data) };
+      } else {
+        return response;
+      }
     };
   }
 }

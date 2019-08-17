@@ -1,7 +1,7 @@
 import { SynologyResponse, BaseRequest, get, SessionName } from "./shared";
 
-const CGI_NAME = "auth";
-const API_NAME = "SYNO.API.Auth";
+const CGI_NAME = "auth" as const;
+const API_NAME = "SYNO.API.Auth" as const;
 
 export interface AuthLoginRequest extends BaseRequest {
   account: string;

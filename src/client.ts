@@ -10,19 +10,6 @@ import {
 } from "./rest";
 import { BaseRequest } from "./rest/shared";
 
-// Make the compiler shut up about inaccessible or unused typings that I actually need for declarations.
-import * as _unused_DownloadStation from "./rest/DownloadStation";
-import * as _unused_FileStation from "./rest/FileStation";
-import { SynologySuccessResponse } from "./rest";
-{
-  let _1: any;
-  _1 = _unused_DownloadStation;
-  _1 = _unused_FileStation;
-  _1 = _1;
-  let _2: SynologySuccessResponse<any> = null as any;
-  _2 = _2;
-}
-
 const NO_PERMISSIONS_ERROR_CODE = 105;
 const SESSION_TIMEOUT_ERROR_CODE = 106;
 
@@ -42,14 +29,15 @@ export interface ApiClientSettings {
   session?: SessionName;
 }
 
-const _settingNames: Record<keyof ApiClientSettings, true> = {
-  baseUrl: true,
-  account: true,
-  passwd: true,
-  session: true,
-};
-
-const SETTING_NAME_KEYS = Object.keys(_settingNames) as (keyof ApiClientSettings)[];
+const SETTING_NAME_KEYS = (function() {
+  const _settingNames: Record<keyof ApiClientSettings, true> = {
+    baseUrl: true,
+    account: true,
+    passwd: true,
+    session: true,
+  };
+  return Object.keys(_settingNames) as (keyof ApiClientSettings)[];
+})();
 
 const TIMEOUT_MESSAGE_REGEX = /timeout of \d+ms exceeded/;
 
