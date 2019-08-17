@@ -30,24 +30,21 @@ function Login(
     api: API_NAME,
     version: options.version || 4,
     method: "login",
-    format: "sid"
+    format: "sid",
   });
 }
 
-function Logout(
-  baseUrl: string,
-  options: AuthLogoutRequest
-): Promise<SynologyResponse<{}>> {
+function Logout(baseUrl: string, options: AuthLogoutRequest): Promise<SynologyResponse<{}>> {
   return get(baseUrl, CGI_NAME, {
     ...options,
     api: API_NAME,
     version: 1,
-    method: "logout"
+    method: "logout",
   });
 }
 
 export const Auth = {
   API_NAME,
   Login,
-  Logout
+  Logout,
 };

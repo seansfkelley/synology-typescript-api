@@ -26,11 +26,11 @@ function Query(
     api: API_NAME,
     version: 1,
     method: "query",
-    query: options.query === "ALL" ? options.query : options.query.join(",")
+    query: options.query === "ALL" ? options.query : options.query.join(","),
   });
 }
 
 export const Info = {
   API_NAME: API_NAME as typeof API_NAME,
-  Query
+  Query,
 };

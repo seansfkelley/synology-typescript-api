@@ -1,11 +1,4 @@
-import {
-  ApiBuilder,
-  BaseRequest,
-  FormFile,
-  SynologyResponse,
-  get,
-  post
-} from "./shared";
+import { ApiBuilder, BaseRequest, FormFile, SynologyResponse, get, post } from "./shared";
 
 // ------------------------------------------------------------------------- //
 //                                   Info                                    //
@@ -48,10 +41,9 @@ const Info = {
     undefined,
     true
   ),
-  SetServerConfig: infoBuilder.makeGet<
-    Partial<DownloadStationInfoConfig> & BaseRequest,
-    {}
-  >("setserverconfig")
+  SetServerConfig: infoBuilder.makeGet<Partial<DownloadStationInfoConfig> & BaseRequest, {}>(
+    "setserverconfig"
+  ),
 };
 
 // ------------------------------------------------------------------------- //
@@ -64,21 +56,19 @@ export interface DownloadStationScheduleConfig {
 }
 
 const SCHEDULE_API_NAME = "SYNO.DownloadStation.Schedule";
-const scheduleBuilder = new ApiBuilder(
-  "DownloadStation/schedule",
-  SCHEDULE_API_NAME
-);
+const scheduleBuilder = new ApiBuilder("DownloadStation/schedule", SCHEDULE_API_NAME);
 
 const Schedule = {
   API_NAME: SCHEDULE_API_NAME as typeof SCHEDULE_API_NAME,
-  GetConfig: scheduleBuilder.makeGet<
-    BaseRequest,
-    DownloadStationScheduleConfig
-  >("getconfig", undefined, undefined, true),
-  SetConfig: scheduleBuilder.makeGet<
-    Partial<DownloadStationScheduleConfig> & BaseRequest,
-    {}
-  >("setconfig")
+  GetConfig: scheduleBuilder.makeGet<BaseRequest, DownloadStationScheduleConfig>(
+    "getconfig",
+    undefined,
+    undefined,
+    true
+  ),
+  SetConfig: scheduleBuilder.makeGet<Partial<DownloadStationScheduleConfig> & BaseRequest, {}>(
+    "setconfig"
+  ),
 };
 
 // ------------------------------------------------------------------------- //
@@ -93,29 +83,23 @@ export interface DownloadStationStatisticGetInfoResponse {
 }
 
 const STATISTIC_API_NAME = "SYNO.DownloadStation.Statistic";
-const statisticsBuilder = new ApiBuilder(
-  "DownloadStation/statistic",
-  STATISTIC_API_NAME
-);
+const statisticsBuilder = new ApiBuilder("DownloadStation/statistic", STATISTIC_API_NAME);
 
 const Statistic = {
   API_NAME: STATISTIC_API_NAME as typeof STATISTIC_API_NAME,
-  GetInfo: statisticsBuilder.makeGet<
-    BaseRequest,
-    DownloadStationStatisticGetInfoResponse
-  >("getinfo", undefined, undefined, true)
+  GetInfo: statisticsBuilder.makeGet<BaseRequest, DownloadStationStatisticGetInfoResponse>(
+    "getinfo",
+    undefined,
+    undefined,
+    true
+  ),
 };
 
 // ------------------------------------------------------------------------- //
 //                                   Tasks                                   //
 // ------------------------------------------------------------------------- //
 
-export type DownloadStationTaskAdditionalType =
-  | "detail"
-  | "transfer"
-  | "file"
-  | "tracker"
-  | "peer";
+export type DownloadStationTaskAdditionalType = "detail" | "transfer" | "file" | "tracker" | "peer";
 
 export interface DownloadStationTaskListRequest extends BaseRequest {
   offset?: number;
@@ -189,7 +173,7 @@ export const __taskNormalStatuses = {
   hash_checking: true,
   paused: true,
   seeding: true,
-  waiting: true
+  waiting: true,
 };
 
 export type DownloadStationTaskNormalStatus = keyof typeof __taskNormalStatuses;
@@ -223,7 +207,7 @@ export const __taskErrorStatuses = {
   timeout: true,
   torrent_duplicate: true,
   try_it_later: true,
-  unknown: true
+  unknown: true,
 };
 
 export type DownloadStationTaskErrorStatus = keyof typeof __taskErrorStatuses;
@@ -313,18 +297,18 @@ function Task_Create(
     method: "create",
     sid,
     file: undefined,
-    uri: undefined
+    uri: undefined,
   };
 
   if (options.file) {
     return post(baseUrl, TASK_CGI_NAME, {
       ...commonOptions,
-      file: options.file
+      file: options.file,
     });
   } else {
     return get(baseUrl, TASK_CGI_NAME, {
       ...commonOptions,
-      uri: options.uri && options.uri.length ? options.uri.join(",") : undefined
+      uri: options.uri && options.uri.length ? options.uri.join(",") : undefined,
     });
   }
 }
@@ -358,7 +342,7 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
       "started_time",
       "total_peers",
       "total_pieces",
-      "waiting_seconds"
+      "waiting_seconds",
     ]);
     if (output.additional.file) {
       output.additional.file.forEach(f => {
@@ -367,11 +351,7 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
     }
     if (output.additional.peer) {
       output.additional.peer.forEach(p => {
-        sideEffectCastNumbers(p, [
-          "progress",
-          "speed_download",
-          "speed_upload"
-        ]);
+        sideEffectCastNumbers(p, ["progress", "speed_download", "speed_upload"]);
       });
     }
     if (output.additional.tracker) {
@@ -384,7 +364,7 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
       "size_downloaded",
       "size_uploaded",
       "speed_download",
-      "speed_upload"
+      "speed_upload",
     ]);
   }
   return output;
@@ -392,17 +372,11 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
 
 const Task = {
   API_NAME: TASK_API_NAME as typeof TASK_API_NAME,
-  List: taskBuilder.makeGet<
-    DownloadStationTaskListRequest,
-    DownloadStationTaskListResponse
-  >(
+  List: taskBuilder.makeGet<DownloadStationTaskListRequest, DownloadStationTaskListResponse>(
     "list",
     o => ({
       ...o,
-      additional:
-        o && o.additional && o.additional.length
-          ? o.additional.join(",")
-          : undefined
+      additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
     }),
     r => ({ ...r, tasks: (r.tasks || []).map(fixTaskNumericTypes) }),
     true
@@ -413,16 +387,13 @@ const Task = {
   >("getinfo", o => ({
     ...o,
     id: o.id.join(","),
-    additional:
-      o && o.additional && o.additional.length
-        ? o.additional.join(",")
-        : undefined
+    additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
   })),
   Create: Task_Create,
-  Delete: taskBuilder.makeGet<
-    DownloadStationTaskDeleteRequest,
-    DownloadStationTaskActionResponse
-  >("delete", o => ({ ...o, id: o.id.join(",") })),
+  Delete: taskBuilder.makeGet<DownloadStationTaskDeleteRequest, DownloadStationTaskActionResponse>(
+    "delete",
+    o => ({ ...o, id: o.id.join(",") })
+  ),
   Pause: taskBuilder.makeGet<
     DownloadStationTaskPauseResumeRequest,
     DownloadStationTaskActionResponse
@@ -431,10 +402,10 @@ const Task = {
     DownloadStationTaskPauseResumeRequest,
     DownloadStationTaskActionResponse
   >("resume", o => ({ ...o, id: o.id.join(",") })),
-  Edit: taskBuilder.makeGet<
-    DownloadStationTaskEditRequest,
-    DownloadStationTaskActionResponse
-  >("edit", o => ({ ...o, id: o.id.join(",") }))
+  Edit: taskBuilder.makeGet<DownloadStationTaskEditRequest, DownloadStationTaskActionResponse>(
+    "edit",
+    o => ({ ...o, id: o.id.join(",") })
+  ),
 };
 
 // ------------------------------------------------------------------------- //
@@ -445,5 +416,5 @@ export const DownloadStation = {
   Info,
   Schedule,
   Statistic,
-  Task
+  Task,
 };

@@ -2,7 +2,7 @@ import {
   ApiBuilder,
   BaseRequest,
   SynologyFailureResponse,
-  SynologySuccessResponse
+  SynologySuccessResponse,
 } from "./shared";
 
 {
@@ -27,7 +27,7 @@ const infoBuilder = new ApiBuilder("entry", INFO_API_NAME);
 
 const Info = {
   API_NAME: INFO_API_NAME as typeof INFO_API_NAME,
-  get: infoBuilder.makeGet<BaseRequest, FileStationInfoGetResponse>("get")
+  get: infoBuilder.makeGet<BaseRequest, FileStationInfoGetResponse>("get"),
 };
 
 // ------------------------------------------------------------------------- //
@@ -63,15 +63,7 @@ export interface FileStationBasePerm {
 export interface FileStationListListShareRequest extends BaseRequest {
   offset?: number;
   limit?: number;
-  sort_by?:
-    | "name"
-    | "user"
-    | "group"
-    | "mtime"
-    | "atime"
-    | "ctime"
-    | "crtime"
-    | "posix";
+  sort_by?: "name" | "user" | "group" | "mtime" | "atime" | "ctime" | "crtime" | "posix";
   sort_direction?: "asc" | "desc";
   onlywritable?: boolean;
   additional?: (
@@ -130,16 +122,7 @@ export interface FileStationListListRequest extends BaseRequest {
   folder_path: string;
   offset?: number;
   limit?: number;
-  sort_by?:
-    | "name"
-    | "user"
-    | "group"
-    | "mtime"
-    | "atime"
-    | "ctime"
-    | "crtime"
-    | "posix"
-    | "type";
+  sort_by?: "name" | "user" | "group" | "mtime" | "atime" | "ctime" | "crtime" | "posix" | "type";
   sort_direction?: "asc" | "desc";
   pattern?: string;
   filetype?: "file" | "dir" | "all";
@@ -191,35 +174,23 @@ const List = {
     "list_share",
     o => ({
       ...o,
-      additional:
-        o && o.additional && o.additional.length
-          ? o.additional.join(",")
-          : undefined
+      additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
     }),
     undefined,
     true
   ),
-  list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>(
-    "list",
+  list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>("list", o => ({
+    ...o,
+    additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
+  })),
+  getinfo: listBuilder.makeGet<FileStationListGetInfoRequest, FileStationListGetInfoResponse>(
+    "getinfo",
     o => ({
       ...o,
-      additional:
-        o && o.additional && o.additional.length
-          ? o.additional.join(",")
-          : undefined
+      path: o.path.join(","),
+      additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
     })
   ),
-  getinfo: listBuilder.makeGet<
-    FileStationListGetInfoRequest,
-    FileStationListGetInfoResponse
-  >("getinfo", o => ({
-    ...o,
-    path: o.path.join(","),
-    additional:
-      o && o.additional && o.additional.length
-        ? o.additional.join(",")
-        : undefined
-  }))
 };
 
 // ------------------------------------------------------------------------- //
@@ -228,5 +199,5 @@ const List = {
 
 export const FileStation = {
   Info,
-  List
+  List,
 };

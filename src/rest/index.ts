@@ -8,5 +8,5 @@ export {
   SynologyFailureResponse,
   SessionName,
   FormFile,
-  isFormFile
+  isFormFile,
 } from "./shared";

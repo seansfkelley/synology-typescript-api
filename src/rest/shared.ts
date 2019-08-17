@@ -3,7 +3,7 @@ import { stringify } from "query-string";
 
 export const SessionName = {
   DownloadStation: "DownloadStation" as const,
-  FileStation: "FileStation" as const
+  FileStation: "FileStation" as const,
 };
 
 export type SessionName = keyof typeof SessionName;
@@ -14,9 +14,7 @@ export interface FormFile {
 }
 
 export function isFormFile(f?: any): f is FormFile {
-  return (
-    f && (f as FormFile).content != null && (f as FormFile).filename != null
-  );
+  return f && (f as FormFile).content != null && (f as FormFile).filename != null;
 }
 
 export interface SynologySuccessResponse<S> {
@@ -32,9 +30,7 @@ export interface SynologyFailureResponse {
   };
 }
 
-export type SynologyResponse<S> =
-  | SynologySuccessResponse<S>
-  | SynologyFailureResponse;
+export type SynologyResponse<S> = SynologySuccessResponse<S> | SynologyFailureResponse;
 
 export interface BaseRequest {
   timeout?: number;
@@ -59,12 +55,12 @@ export function get<O extends object>(
   const url = `${baseUrl}/webapi/${cgi}.cgi?${stringify({
     ...request,
     _sid: request.sid,
-    timeout: undefined
+    timeout: undefined,
   })}`;
 
   return Axios.get(url, {
     timeout: request.timeout || DEFAULT_TIMEOUT,
-    withCredentials: false
+    withCredentials: false,
   }).then(response => {
     return response.data;
   });
@@ -100,7 +96,7 @@ export function post<O extends object>(
 
   return Axios.post(url, formData, {
     timeout: request.timeout || DEFAULT_TIMEOUT,
-    withCredentials: false
+    withCredentials: false,
   }).then(response => {
     return response.data;
   });
@@ -119,11 +115,7 @@ export class ApiBuilder {
     preprocess: ((options?: I) => object) | undefined,
     postprocess: ((response: O) => O) | undefined,
     optional: true
-  ): (
-    baseUrl: string,
-    sid: string,
-    options?: I
-  ) => Promise<SynologyResponse<O>>;
+  ): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
 
   makeGet(
     methodName: string,
@@ -144,11 +136,7 @@ export class ApiBuilder {
     preprocess: ((options?: I) => object) | undefined,
     postprocess: ((response: O) => O) | undefined,
     optional: true
-  ): (
-    baseUrl: string,
-    sid: string,
-    options?: I
-  ) => Promise<SynologyResponse<O>>;
+  ): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
 
   makePost(
     methodName: string,
@@ -173,7 +161,7 @@ export class ApiBuilder {
         api: this.apiName,
         version: 1,
         method: methodName,
-        sid
+        sid,
       }).then(response => {
         if (response.success) {
           return { ...response, data: postprocess!(response.data) };
