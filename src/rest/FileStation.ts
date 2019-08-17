@@ -2,12 +2,13 @@ import {
   ApiBuilder,
   BaseRequest,
   SynologyFailureResponse,
-  SynologySuccessResponse,
-} from './shared';
+  SynologySuccessResponse
+} from "./shared";
 
 {
   // Typescript wants these types for declarations, but also claims they're unused. Thanks.
-  let _: SynologySuccessResponse<any> | SynologyFailureResponse = null as any; _ =_;
+  let _: SynologySuccessResponse<any> | SynologyFailureResponse = null as any;
+  _ = _;
 }
 
 // ------------------------------------------------------------------------- //
@@ -21,12 +22,12 @@ export interface FileStationInfoGetResponse {
   hostname: string;
 }
 
-const INFO_API_NAME = 'SYNO.FileStation.Info';
-const infoBuilder = new ApiBuilder('entry', INFO_API_NAME);
+const INFO_API_NAME = "SYNO.FileStation.Info";
+const infoBuilder = new ApiBuilder("entry", INFO_API_NAME);
 
 const Info = {
   API_NAME: INFO_API_NAME as typeof INFO_API_NAME,
-  get: infoBuilder.makeGet<BaseRequest, FileStationInfoGetResponse>('get')
+  get: infoBuilder.makeGet<BaseRequest, FileStationInfoGetResponse>("get")
 };
 
 // ------------------------------------------------------------------------- //
@@ -62,10 +63,25 @@ export interface FileStationBasePerm {
 export interface FileStationListListShareRequest extends BaseRequest {
   offset?: number;
   limit?: number;
-  sort_by?: 'name' | 'user' | 'group' | 'mtime' | 'atime' | 'ctime' | 'crtime' | 'posix';
-  sort_direction?: 'asc' | 'desc';
+  sort_by?:
+    | "name"
+    | "user"
+    | "group"
+    | "mtime"
+    | "atime"
+    | "ctime"
+    | "crtime"
+    | "posix";
+  sort_direction?: "asc" | "desc";
   onlywritable?: boolean;
-  additional?: ('real_path' | 'size' | 'owner' | 'time' | 'perm' | 'mount_point_type' | 'volume_status')[];
+  additional?: (
+    | "real_path"
+    | "size"
+    | "owner"
+    | "time"
+    | "perm"
+    | "mount_point_type"
+    | "volume_status")[];
 }
 
 export interface FileStationSharedFolder {
@@ -101,16 +117,32 @@ export interface FileStationListListShareResponse {
   shares: FileStationSharedFolder[];
 }
 
-export type FileStationFileAdditionalType = 'real_path' | 'size' | 'owner' | 'time' | 'perm' | 'mount_point_type' | 'type';
+export type FileStationFileAdditionalType =
+  | "real_path"
+  | "size"
+  | "owner"
+  | "time"
+  | "perm"
+  | "mount_point_type"
+  | "type";
 
 export interface FileStationListListRequest extends BaseRequest {
   folder_path: string;
   offset?: number;
   limit?: number;
-  sort_by?: 'name' | 'user' | 'group' | 'mtime' | 'atime' | 'ctime' | 'crtime' | 'posix' | 'type';
-  sort_direction?: 'asc' | 'desc';
+  sort_by?:
+    | "name"
+    | "user"
+    | "group"
+    | "mtime"
+    | "atime"
+    | "ctime"
+    | "crtime"
+    | "posix"
+    | "type";
+  sort_direction?: "asc" | "desc";
   pattern?: string;
-  filetype?: 'file' | 'dir' | 'all';
+  filetype?: "file" | "dir" | "all";
   goto_path?: string;
   additional?: FileStationFileAdditionalType[];
 }
@@ -147,24 +179,47 @@ export interface FileStationListGetInfoResponse {
   files: FileStationFile[];
 }
 
-const LIST_API_NAME = 'SYNO.FileStation.List';
-const listBuilder = new ApiBuilder('entry', LIST_API_NAME);
+const LIST_API_NAME = "SYNO.FileStation.List";
+const listBuilder = new ApiBuilder("entry", LIST_API_NAME);
 
 const List = {
   API_NAME: LIST_API_NAME as typeof LIST_API_NAME,
-  list_share: listBuilder.makeGet<FileStationListListShareRequest, FileStationListListShareResponse>(
-    'list_share',
-    o => ({ ...o, additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined }),
+  list_share: listBuilder.makeGet<
+    FileStationListListShareRequest,
+    FileStationListListShareResponse
+  >(
+    "list_share",
+    o => ({
+      ...o,
+      additional:
+        o && o.additional && o.additional.length
+          ? o.additional.join(",")
+          : undefined
+    }),
     undefined,
-    true),
-  list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>(
-    'list',
-    o => ({ ...o, additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined })
+    true
   ),
-  getinfo: listBuilder.makeGet<FileStationListGetInfoRequest, FileStationListGetInfoResponse>(
-    'getinfo',
-    o => ({ ...o, path: o.path.join(','), additional: o && o.additional && o.additional.length ? o.additional.join(',') : undefined })
-  )
+  list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>(
+    "list",
+    o => ({
+      ...o,
+      additional:
+        o && o.additional && o.additional.length
+          ? o.additional.join(",")
+          : undefined
+    })
+  ),
+  getinfo: listBuilder.makeGet<
+    FileStationListGetInfoRequest,
+    FileStationListGetInfoResponse
+  >("getinfo", o => ({
+    ...o,
+    path: o.path.join(","),
+    additional:
+      o && o.additional && o.additional.length
+        ? o.additional.join(",")
+        : undefined
+  }))
 };
 
 // ------------------------------------------------------------------------- //

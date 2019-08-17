@@ -6,17 +6,21 @@ import {
   Info,
   SynologyResponse,
   SessionName,
-  SynologyFailureResponse,
-} from './rest';
-import { BaseRequest } from './rest/shared';
+  SynologyFailureResponse
+} from "./rest";
+import { BaseRequest } from "./rest/shared";
 
 // Make the compiler shut up about inaccessible or unused typings that I actually need for declarations.
-import * as _unused_DownloadStation from './rest/DownloadStation';
-import * as _unused_FileStation from './rest/FileStation';
-import { SynologySuccessResponse } from './rest';
+import * as _unused_DownloadStation from "./rest/DownloadStation";
+import * as _unused_FileStation from "./rest/FileStation";
+import { SynologySuccessResponse } from "./rest";
 {
-  let _1: any; _1 = _unused_DownloadStation; _1 = _unused_FileStation; _1 = _1;
-  let _2: SynologySuccessResponse<any> = null as any; _2 = _2;
+  let _1: any;
+  _1 = _unused_DownloadStation;
+  _1 = _unused_FileStation;
+  _1 = _1;
+  let _2: SynologySuccessResponse<any> = null as any;
+  _2 = _2;
 }
 
 const NO_PERMISSIONS_ERROR_CODE = 105;
@@ -39,49 +43,68 @@ export interface ApiClientSettings {
 }
 
 const _settingNames: Record<keyof ApiClientSettings, true> = {
-  'baseUrl': true,
-  'account': true,
-  'passwd': true,
-  'session': true,
+  baseUrl: true,
+  account: true,
+  passwd: true,
+  session: true
 };
 
-const SETTING_NAME_KEYS = Object.keys(_settingNames) as (keyof ApiClientSettings)[];
+const SETTING_NAME_KEYS = Object.keys(
+  _settingNames
+) as (keyof ApiClientSettings)[];
 
 const TIMEOUT_MESSAGE_REGEX = /timeout of \d+ms exceeded/;
 
 function handleRejection(error: any): ConnectionFailure {
   if (error && error.response && error.response.status === 400) {
-    return { type: 'probable-wrong-protocol', error };
-  } else if (error && error.message === 'Network Error') {
-    return { type: 'probable-wrong-url-or-no-connection-or-cert-error', error };
+    return { type: "probable-wrong-protocol", error };
+  } else if (error && error.message === "Network Error") {
+    return { type: "probable-wrong-url-or-no-connection-or-cert-error", error };
   } else if (error && TIMEOUT_MESSAGE_REGEX.test(error.message)) {
     // This is a best-effort which I expect to start silently falling back onto 'unknown error' at some point in the future.
-    return { type: 'timeout', error };
+    return { type: "timeout", error };
   } else {
-    return { type: 'unknown', error };
+    return { type: "unknown", error };
   }
 }
 
-export type ConnectionFailure = {
-  type: 'missing-config';
-} | {
-  type: 'probable-wrong-protocol' | 'probable-wrong-url-or-no-connection-or-cert-error' | 'timeout' | 'unknown';
-  error: any;
-};
+export type ConnectionFailure =
+  | {
+      type: "missing-config";
+    }
+  | {
+      type:
+        | "probable-wrong-protocol"
+        | "probable-wrong-url-or-no-connection-or-cert-error"
+        | "timeout"
+        | "unknown";
+      error: any;
+    };
 
-export function isConnectionFailure(result: SynologyResponse<{}> | ConnectionFailure): result is ConnectionFailure {
-  return (result as ConnectionFailure).type != null && (result as SynologyResponse<{}>).success == null;
+export function isConnectionFailure(
+  result: SynologyResponse<{}> | ConnectionFailure
+): result is ConnectionFailure {
+  return (
+    (result as ConnectionFailure).type != null &&
+    (result as SynologyResponse<{}>).success == null
+  );
 }
 
 export class ApiClient {
-  private sidPromise: Promise<SynologyResponse<AuthLoginResponse & ExtraLoginInfo>> | undefined;
+  private sidPromise:
+    | Promise<SynologyResponse<AuthLoginResponse & ExtraLoginInfo>>
+    | undefined;
   private settingsVersion: number = 0;
   private onSettingsChangeListeners: (() => void)[] = [];
 
   constructor(private settings: ApiClientSettings) {}
 
   public updateSettings(settings: ApiClientSettings) {
-    if (settings != null && (this.settings == null || SETTING_NAME_KEYS.some(k => settings[k] !== this.settings[k]))) {
+    if (
+      settings != null &&
+      (this.settings == null ||
+        SETTING_NAME_KEYS.some(k => settings[k] !== this.settings[k]))
+    ) {
       this.settingsVersion++;
       this.settings = settings;
       this.maybeLogout();
@@ -96,7 +119,9 @@ export class ApiClient {
     let isSubscribed = true;
     return () => {
       if (isSubscribed) {
-        this.onSettingsChangeListeners = this.onSettingsChangeListeners.filter(l => l !== listener);
+        this.onSettingsChangeListeners = this.onSettingsChangeListeners.filter(
+          l => l !== listener
+        );
         isSubscribed = false;
       }
     };
@@ -109,43 +134,49 @@ export class ApiClient {
     });
   }
 
-  private maybeLogin = (request?: BaseRequest): Promise<SynologyResponse<AuthLoginResponse & ExtraLoginInfo>| ConnectionFailure> => {
+  private maybeLogin = (
+    request?: BaseRequest
+  ): Promise<
+    SynologyResponse<AuthLoginResponse & ExtraLoginInfo> | ConnectionFailure
+  > => {
     if (!this.sidPromise) {
       if (!this.isFullyConfigured()) {
         const failure: ConnectionFailure = {
-          type: 'missing-config'
+          type: "missing-config"
         };
         return Promise.resolve(failure);
       } else {
         const cachedSettings = this.settings;
-        this.sidPromise = Info.Query(cachedSettings.baseUrl!, { query: [ Auth.API_NAME ] })
-          .then(apiVersions => {
-            const authApiVersion: 1 | 4 = apiVersions.success && apiVersions.data[Auth.API_NAME].maxVersion >= 4
+        this.sidPromise = Info.Query(cachedSettings.baseUrl!, {
+          query: [Auth.API_NAME]
+        }).then(apiVersions => {
+          const authApiVersion: 1 | 4 =
+            apiVersions.success &&
+            apiVersions.data[Auth.API_NAME].maxVersion >= 4
               ? 4
               : 1;
-            return Auth.Login(cachedSettings.baseUrl!, {
-              ...(request || {}),
-              account: cachedSettings.account!,
-              passwd: cachedSettings.passwd!,
-              session: cachedSettings.session!,
-              version: authApiVersion,
-            })
-              .then(response => {
-                if (response.success) {
-                  return {
-                    ...response,
-                    data: {
-                      ...response.data,
-                      extra: {
-                        isLegacyLogin: authApiVersion === 1
-                      }
-                    }
-                  };
-                } else {
-                  return response;
+          return Auth.Login(cachedSettings.baseUrl!, {
+            ...(request || {}),
+            account: cachedSettings.account!,
+            passwd: cachedSettings.passwd!,
+            session: cachedSettings.session!,
+            version: authApiVersion
+          }).then(response => {
+            if (response.success) {
+              return {
+                ...response,
+                data: {
+                  ...response.data,
+                  extra: {
+                    isLegacyLogin: authApiVersion === 1
+                  }
                 }
-              });
-          })
+              };
+            } else {
+              return response;
+            }
+          });
+        });
         return this.sidPromise.catch(handleRejection);
       }
     } else {
@@ -160,14 +191,16 @@ export class ApiClient {
   // (2) The result of this call, either success or failure, has no bearing on future API calls. It
   //     is provided to the caller only for convenience, and may not reflect the true state of the
   //     client or session at the time the promise is resolved.
-  private maybeLogout = (request?: BaseRequest): Promise<SynologyResponse<{}> | ConnectionFailure | 'not-logged-in'> => {
+  private maybeLogout = (
+    request?: BaseRequest
+  ): Promise<SynologyResponse<{}> | ConnectionFailure | "not-logged-in"> => {
     const stashedSidPromise = this.sidPromise;
     this.sidPromise = undefined;
 
     if (stashedSidPromise) {
       if (!this.isFullyConfigured()) {
         const failure: ConnectionFailure = {
-          type: 'missing-config'
+          type: "missing-config"
         };
         return Promise.resolve(failure);
       } else {
@@ -187,16 +220,38 @@ export class ApiClient {
           .catch(handleRejection);
       }
     } else {
-      return Promise.resolve('not-logged-in' as 'not-logged-in');
+      return Promise.resolve("not-logged-in" as "not-logged-in");
     }
   };
 
-  private proxy<T, U>(fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
-  private proxy<T, U>(fn: (baseUrl: string, sid: string, options?: T) => Promise<SynologyResponse<U>>, optional: true): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
+  private proxy<T, U>(
+    fn: (
+      baseUrl: string,
+      sid: string,
+      options: T
+    ) => Promise<SynologyResponse<U>>
+  ): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
+  private proxy<T, U>(
+    fn: (
+      baseUrl: string,
+      sid: string,
+      options?: T
+    ) => Promise<SynologyResponse<U>>,
+    optional: true
+  ): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
 
   // This function is a doozy. Thank goodness for Typescript.
-  private proxy<T, U>(fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>) {
-    const wrappedFunction = (options: T, shouldRetryRoutineFailures: boolean = true): Promise<SynologyResponse<U> | ConnectionFailure> => {
+  private proxy<T, U>(
+    fn: (
+      baseUrl: string,
+      sid: string,
+      options: T
+    ) => Promise<SynologyResponse<U>>
+  ) {
+    const wrappedFunction = (
+      options: T,
+      shouldRetryRoutineFailures: boolean = true
+    ): Promise<SynologyResponse<U> | ConnectionFailure> => {
       const versionAtInit = this.settingsVersion;
 
       const settingsStillValid = () => {
@@ -208,7 +263,11 @@ export class ApiClient {
       };
 
       const retryIfAllowed = (response: SynologyFailureResponse) => {
-        if (shouldRetryRoutineFailures && (response.error.code === SESSION_TIMEOUT_ERROR_CODE || response.error.code === NO_PERMISSIONS_ERROR_CODE)) {
+        if (
+          shouldRetryRoutineFailures &&
+          (response.error.code === SESSION_TIMEOUT_ERROR_CODE ||
+            response.error.code === NO_PERMISSIONS_ERROR_CODE)
+        ) {
           this.sidPromise = undefined;
           return wrappedFunction(options, false);
         } else {
@@ -227,18 +286,21 @@ export class ApiClient {
             if (isConnectionFailure(response)) {
               return response;
             } else if (response.success) {
-              return fn(this.settings.baseUrl!, response.data.sid, options)
-                .then(response => {
-                  if (settingsStillValid()) {
-                    if (isConnectionFailure(response) || response.success) {
-                      return response;
-                    } else {
-                      return retryIfAllowed(response);
-                    }
+              return fn(
+                this.settings.baseUrl!,
+                response.data.sid,
+                options
+              ).then(response => {
+                if (settingsStillValid()) {
+                  if (isConnectionFailure(response) || response.success) {
+                    return response;
                   } else {
-                    return unconditionallyRetry();
+                    return retryIfAllowed(response);
                   }
-                });
+                } else {
+                  return unconditionallyRetry();
+                }
+              });
             } else {
               return retryIfAllowed(response);
             }
@@ -254,21 +316,21 @@ export class ApiClient {
 
   public Auth = {
     Login: this.maybeLogin,
-    Logout: this.maybeLogout,
+    Logout: this.maybeLogout
   };
 
   public DownloadStation = {
     Info: {
       GetInfo: this.proxy(DownloadStation.Info.GetInfo, true),
       GetConfig: this.proxy(DownloadStation.Info.GetConfig, true),
-      SetServerConfig: this.proxy(DownloadStation.Info.SetServerConfig),
+      SetServerConfig: this.proxy(DownloadStation.Info.SetServerConfig)
     },
     Schedule: {
       GetConfig: this.proxy(DownloadStation.Schedule.GetConfig, true),
-      SetConfig: this.proxy(DownloadStation.Schedule.SetConfig),
+      SetConfig: this.proxy(DownloadStation.Schedule.SetConfig)
     },
     Statistic: {
-      GetInfo: this.proxy(DownloadStation.Statistic.GetInfo, true),
+      GetInfo: this.proxy(DownloadStation.Statistic.GetInfo, true)
     },
     Task: {
       List: this.proxy(DownloadStation.Task.List, true),
@@ -277,18 +339,18 @@ export class ApiClient {
       Delete: this.proxy(DownloadStation.Task.Delete),
       Pause: this.proxy(DownloadStation.Task.Pause),
       Resume: this.proxy(DownloadStation.Task.Resume),
-      Edit: this.proxy(DownloadStation.Task.Edit),
+      Edit: this.proxy(DownloadStation.Task.Edit)
     }
   };
 
   public FileStation = {
     Info: {
-      get: this.proxy(FileStation.Info.get),
+      get: this.proxy(FileStation.Info.get)
     },
     List: {
       list_share: this.proxy(FileStation.List.list_share, true),
       list: this.proxy(FileStation.List.list),
-      getinfo: this.proxy(FileStation.List.getinfo),
+      getinfo: this.proxy(FileStation.List.getinfo)
     }
   };
 }
