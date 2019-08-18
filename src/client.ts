@@ -39,21 +39,6 @@ const SETTING_NAME_KEYS = (function() {
   return Object.keys(_settingNames) as (keyof ApiClientSettings)[];
 })();
 
-const TIMEOUT_MESSAGE_REGEX = /timeout of \d+ms exceeded/;
-
-function handleRejection(error: any): ConnectionFailure {
-  if (error && error.response && error.response.status === 400) {
-    return { type: "probable-wrong-protocol", error };
-  } else if (error && error.message === "Network Error") {
-    return { type: "probable-wrong-url-or-no-connection-or-cert-error", error };
-  } else if (error && TIMEOUT_MESSAGE_REGEX.test(error.message)) {
-    // This is a best-effort which I expect to start silently falling back onto 'unknown error' at some point in the future.
-    return { type: "timeout", error };
-  } else {
-    return { type: "unknown", error };
-  }
-}
-
 export type ConnectionFailure =
   | {
       type: "missing-config";
@@ -67,6 +52,21 @@ export type ConnectionFailure =
       error: any;
     };
 
+const ConnectionFailure = {
+  from: (error: any): ConnectionFailure => {
+    if (error && error.response && error.response.status === 400) {
+      return { type: "probable-wrong-protocol", error };
+    } else if (error && error.message === "Network Error") {
+      return { type: "probable-wrong-url-or-no-connection-or-cert-error", error };
+    } else if (error && /timeout of \d+ms exceeded/.test(error.message)) {
+      // This is a best-effort which I expect to start silently falling back onto 'unknown error' at some point in the future.
+      return { type: "timeout", error };
+    } else {
+      return { type: "unknown", error };
+    }
+  },
+};
+
 export function isConnectionFailure(
   result: SynologyResponse<{}> | ConnectionFailure
 ): result is ConnectionFailure {
@@ -75,8 +75,10 @@ export function isConnectionFailure(
   );
 }
 
+type LoginResponse = SynologyResponse<AuthLoginResponse & ExtraLoginInfo>;
+
 export class ApiClient {
-  private sidPromise: Promise<SynologyResponse<AuthLoginResponse & ExtraLoginInfo>> | undefined;
+  private loginPromise: Promise<LoginResponse> | undefined;
   private settingsVersion: number = 0;
   private onSettingsChangeListeners: (() => void)[] = [];
 
@@ -114,48 +116,50 @@ export class ApiClient {
     });
   }
 
-  private maybeLogin = (
-    request?: BaseRequest
-  ): Promise<SynologyResponse<AuthLoginResponse & ExtraLoginInfo> | ConnectionFailure> => {
-    if (!this.sidPromise) {
-      if (!this.isFullyConfigured()) {
-        const failure: ConnectionFailure = {
-          type: "missing-config",
-        };
-        return Promise.resolve(failure);
-      } else {
-        const cachedSettings = this.settings;
-        this.sidPromise = Info.Query(cachedSettings.baseUrl!, {
-          query: [Auth.API_NAME],
-        }).then(apiVersions => {
-          const authApiVersion: 1 | 4 =
-            apiVersions.success && apiVersions.data[Auth.API_NAME].maxVersion >= 4 ? 4 : 1;
-          return Auth.Login(cachedSettings.baseUrl!, {
-            ...(request || {}),
-            account: cachedSettings.account!,
-            passwd: cachedSettings.passwd!,
-            session: cachedSettings.session!,
-            version: authApiVersion,
-          }).then(response => {
-            if (response.success) {
-              return {
-                ...response,
-                data: {
-                  ...response.data,
-                  extra: {
-                    isLegacyLogin: authApiVersion === 1,
-                  },
-                },
-              };
-            } else {
-              return response;
-            }
-          });
-        });
-        return this.sidPromise.catch(handleRejection);
-      }
+  private async login(request: BaseRequest | undefined): Promise<LoginResponse> {
+    const cachedSettings = this.settings;
+    const apiVersions = await Info.Query(cachedSettings.baseUrl!, {
+      query: [Auth.API_NAME],
+    });
+    const authApiVersion: 1 | 4 =
+      apiVersions.success && apiVersions.data[Auth.API_NAME].maxVersion >= 4 ? 4 : 1;
+    const response = await Auth.Login(cachedSettings.baseUrl!, {
+      ...request,
+      account: cachedSettings.account!,
+      passwd: cachedSettings.passwd!,
+      session: cachedSettings.session!,
+      version: authApiVersion,
+    });
+
+    if (response.success) {
+      return {
+        ...response,
+        data: {
+          ...response.data,
+          extra: {
+            isLegacyLogin: authApiVersion === 1,
+          },
+        },
+      };
     } else {
-      return this.sidPromise.catch(handleRejection);
+      return response;
+    }
+  }
+
+  private maybeLogin = async (request?: BaseRequest) => {
+    if (!this.isFullyConfigured()) {
+      const failure: ConnectionFailure = {
+        type: "missing-config",
+      };
+      return failure;
+    } else if (!this.loginPromise) {
+      this.loginPromise = this.login(request);
+    }
+
+    try {
+      return await this.loginPromise;
+    } catch (e) {
+      return ConnectionFailure.from(e);
     }
   };
 
@@ -166,36 +170,42 @@ export class ApiClient {
   // (2) The result of this call, either success or failure, has no bearing on future API calls. It
   //     is provided to the caller only for convenience, and may not reflect the true state of the
   //     client or session at the time the promise is resolved.
-  private maybeLogout = (
+  private maybeLogout = async (
     request?: BaseRequest
   ): Promise<SynologyResponse<{}> | ConnectionFailure | "not-logged-in"> => {
-    const stashedSidPromise = this.sidPromise;
-    this.sidPromise = undefined;
+    const stashedLoginPromise = this.loginPromise;
+    this.loginPromise = undefined;
 
-    if (stashedSidPromise) {
-      if (!this.isFullyConfigured()) {
-        const failure: ConnectionFailure = {
-          type: "missing-config",
-        };
-        return Promise.resolve(failure);
-      } else {
-        const { baseUrl, session } = this.settings;
-        return stashedSidPromise
-          .then(response => {
-            if (response.success) {
-              return Auth.Logout(baseUrl!, {
-                ...(request || {}),
-                sid: response.data.sid,
-                session: session!,
-              });
-            } else {
-              return response;
-            }
-          })
-          .catch(handleRejection);
-      }
+    if (!stashedLoginPromise) {
+      return "not-logged-in" as const;
+    } else if (!this.isFullyConfigured()) {
+      const failure: ConnectionFailure = {
+        type: "missing-config",
+      };
+      return failure;
     } else {
-      return Promise.resolve("not-logged-in" as const);
+      let response: LoginResponse;
+      const { baseUrl, session } = this.settings;
+
+      try {
+        response = await stashedLoginPromise;
+      } catch (e) {
+        return ConnectionFailure.from(e);
+      }
+
+      if (response.success) {
+        try {
+          return await Auth.Logout(baseUrl!, {
+            ...request,
+            sid: response.data.sid,
+            session: session!,
+          });
+        } catch (e) {
+          return ConnectionFailure.from(e);
+        }
+      } else {
+        return response;
+      }
     }
   };
 
@@ -207,67 +217,51 @@ export class ApiClient {
     optional: true
   ): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
 
-  // This function is a doozy. Thank goodness for Typescript.
   private proxy<T, U>(
     fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>
   ) {
-    const wrappedFunction = (
+    const wrappedFunction = async (
       options: T,
       shouldRetryRoutineFailures: boolean = true
     ): Promise<SynologyResponse<U> | ConnectionFailure> => {
       const versionAtInit = this.settingsVersion;
 
-      const settingsStillValid = () => {
-        return this.settingsVersion === versionAtInit;
-      };
-
-      const unconditionallyRetry = () => {
-        return wrappedFunction(options);
-      };
-
-      const retryIfAllowed = (response: SynologyFailureResponse) => {
+      const maybeLogoutAndRetry = (response: SynologyFailureResponse) => {
         if (
           shouldRetryRoutineFailures &&
           (response.error.code === SESSION_TIMEOUT_ERROR_CODE ||
             response.error.code === NO_PERMISSIONS_ERROR_CODE)
         ) {
-          this.sidPromise = undefined;
+          this.loginPromise = undefined;
           return wrappedFunction(options, false);
         } else {
           return response;
         }
       };
 
-      // This can't really be unnested or broken into functions in a more-readable way. The recursive implementation
-      // handling out-of-date settings breaks the abstraction provided by a series of .then, because if we ever hit
-      // that branch we want to stop all further processing along the current line and defer entirely to that call.
-      // Thus, if we flatten into a series .then, we will always run through successive .then and may end up making
-      // several requests needlessly.
-      return this.maybeLogin()
-        .then(response => {
-          if (settingsStillValid()) {
-            if (isConnectionFailure(response)) {
-              return response;
-            } else if (response.success) {
-              return fn(this.settings.baseUrl!, response.data.sid, options).then(response => {
-                if (settingsStillValid()) {
-                  if (isConnectionFailure(response) || response.success) {
-                    return response;
-                  } else {
-                    return retryIfAllowed(response);
-                  }
-                } else {
-                  return unconditionallyRetry();
-                }
-              });
-            } else {
-              return retryIfAllowed(response);
-            }
+      try {
+        const loginResponse = await this.maybeLogin();
+
+        if (this.settingsVersion !== versionAtInit) {
+          return await wrappedFunction(options);
+        } else if (isConnectionFailure(loginResponse)) {
+          return loginResponse;
+        } else if (!loginResponse.success) {
+          return await maybeLogoutAndRetry(loginResponse);
+        } else {
+          const response = await fn(this.settings.baseUrl!, loginResponse.data.sid, options);
+
+          if (this.settingsVersion !== versionAtInit) {
+            return await wrappedFunction(options);
+          } else if (response.success) {
+            return response;
           } else {
-            return unconditionallyRetry();
+            return await maybeLogoutAndRetry(response);
           }
-        })
-        .catch(handleRejection);
+        }
+      } catch (e) {
+        return ConnectionFailure.from(e);
+      }
     };
 
     return wrappedFunction;
