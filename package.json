@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "scripts": {
-    "test": "prettier --check src/**/* && tsc",
+    "test": "prettier --check src/**/* && tsc --noemit",
     "prepublishOnly": "tsc"
   },
   "repository": {
