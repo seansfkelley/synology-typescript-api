@@ -50,7 +50,7 @@ const DEFAULT_TIMEOUT = 60000;
 export async function get<O extends object>(
   baseUrl: string,
   cgi: string,
-  request: SynologyApiRequest
+  request: SynologyApiRequest,
 ): Promise<SynologyResponse<O>> {
   const url = `${baseUrl}/webapi/${cgi}.cgi?${stringify({
     ...request,
@@ -67,7 +67,7 @@ export async function get<O extends object>(
 export async function post<O extends object>(
   baseUrl: string,
   cgi: string,
-  request: SynologyApiRequest
+  request: SynologyApiRequest,
 ): Promise<SynologyResponse<O>> {
   const formData = new FormData();
 
@@ -104,20 +104,20 @@ export class ApiBuilder {
   makeGet<I extends BaseRequest, O>(
     methodName: string,
     preprocess?: (options: I) => object,
-    postprocess?: (response: O) => O
+    postprocess?: (response: O) => O,
   ): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
   makeGet<I extends BaseRequest, O>(
     methodName: string,
     preprocess: ((options?: I) => object) | undefined,
     postprocess: ((response: O) => O) | undefined,
-    optional: true
+    optional: true,
   ): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
 
   makeGet(
     methodName: string,
     preprocess?: (options: object) => object,
     postprocess?: (response: object) => object,
-    _optional?: true
+    _optional?: true,
   ) {
     return this.makeApiRequest(get, methodName, preprocess, postprocess);
   }
@@ -125,20 +125,20 @@ export class ApiBuilder {
   makePost<I extends BaseRequest, O>(
     methodName: string,
     preprocess?: (options: I) => object,
-    postprocess?: (response: O) => O
+    postprocess?: (response: O) => O,
   ): (baseUrl: string, sid: string, options: I) => Promise<SynologyResponse<O>>;
   makePost<I extends BaseRequest, O>(
     methodName: string,
     preprocess: ((options?: I) => object) | undefined,
     postprocess: ((response: O) => O) | undefined,
-    optional: true
+    optional: true,
   ): (baseUrl: string, sid: string, options?: I) => Promise<SynologyResponse<O>>;
 
   makePost(
     methodName: string,
     preprocess?: (options: object) => object,
     postprocess?: (response: object) => object,
-    _optional?: true
+    _optional?: true,
   ) {
     return this.makeApiRequest(post, methodName, preprocess, postprocess);
   }
@@ -147,7 +147,7 @@ export class ApiBuilder {
     method: (typeof get) | (typeof post),
     methodName: string,
     preprocess?: (options: object) => object,
-    postprocess?: (response: object) => object
+    postprocess?: (response: object) => object,
   ) {
     preprocess = preprocess || (o => o);
     postprocess = postprocess || (r => r);

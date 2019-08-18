@@ -23,7 +23,7 @@ export interface AuthLogoutRequest extends BaseRequest {
 
 function Login(
   baseUrl: string,
-  options: AuthLoginRequest
+  options: AuthLoginRequest,
 ): Promise<SynologyResponse<AuthLoginResponse>> {
   return get(baseUrl, CGI_NAME, {
     ...options,

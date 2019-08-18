@@ -68,7 +68,7 @@ const ConnectionFailure = {
 };
 
 export function isConnectionFailure(
-  result: SynologyResponse<{}> | ConnectionFailure
+  result: SynologyResponse<{}> | ConnectionFailure,
 ): result is ConnectionFailure {
   return (
     (result as ConnectionFailure).type != null && (result as SynologyResponse<{}>).success == null
@@ -171,7 +171,7 @@ export class ApiClient {
   //     is provided to the caller only for convenience, and may not reflect the true state of the
   //     client or session at the time the promise is resolved.
   private maybeLogout = async (
-    request?: BaseRequest
+    request?: BaseRequest,
   ): Promise<SynologyResponse<{}> | ConnectionFailure | "not-logged-in"> => {
     const stashedLoginPromise = this.loginPromise;
     this.loginPromise = undefined;
@@ -210,19 +210,19 @@ export class ApiClient {
   };
 
   private proxy<T, U>(
-    fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>
+    fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>,
   ): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
   private proxy<T, U>(
     fn: (baseUrl: string, sid: string, options?: T) => Promise<SynologyResponse<U>>,
-    optional: true
+    optional: true,
   ): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
 
   private proxy<T, U>(
-    fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>
+    fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>,
   ) {
     const wrappedFunction = async (
       options: T,
-      shouldRetryRoutineFailures: boolean = true
+      shouldRetryRoutineFailures: boolean = true,
     ): Promise<SynologyResponse<U> | ConnectionFailure> => {
       const versionAtInit = this.settingsVersion;
 

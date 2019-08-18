@@ -33,16 +33,16 @@ const Info = {
     "getinfo",
     undefined,
     undefined,
-    true
+    true,
   ),
   GetConfig: infoBuilder.makeGet<BaseRequest, DownloadStationInfoConfig>(
     "getconfig",
     undefined,
     undefined,
-    true
+    true,
   ),
   SetServerConfig: infoBuilder.makeGet<Partial<DownloadStationInfoConfig> & BaseRequest, {}>(
-    "setserverconfig"
+    "setserverconfig",
   ),
 };
 
@@ -64,10 +64,10 @@ const Schedule = {
     "getconfig",
     undefined,
     undefined,
-    true
+    true,
   ),
   SetConfig: scheduleBuilder.makeGet<Partial<DownloadStationScheduleConfig> & BaseRequest, {}>(
-    "setconfig"
+    "setconfig",
   ),
 };
 
@@ -91,7 +91,7 @@ const Statistic = {
     "getinfo",
     undefined,
     undefined,
-    true
+    true,
   ),
 };
 
@@ -178,7 +178,7 @@ export const __taskNormalStatuses = {
 
 export type DownloadStationTaskNormalStatus = keyof typeof __taskNormalStatuses;
 export const ALL_TASK_NORMAL_STATUSES = Object.keys(
-  __taskNormalStatuses
+  __taskNormalStatuses,
 ) as DownloadStationTaskNormalStatus[];
 
 export const __taskErrorStatuses = {
@@ -212,7 +212,7 @@ export const __taskErrorStatuses = {
 
 export type DownloadStationTaskErrorStatus = keyof typeof __taskErrorStatuses;
 export const ALL_TASK_ERROR_STATUSES = Object.keys(
-  __taskErrorStatuses
+  __taskErrorStatuses,
 ) as DownloadStationTaskErrorStatus[];
 
 export interface DownloadStationTask {
@@ -285,7 +285,7 @@ const taskBuilder = new ApiBuilder(TASK_CGI_NAME, TASK_API_NAME);
 function Task_Create(
   baseUrl: string,
   sid: string,
-  options: DownloadStationTaskCreateRequest
+  options: DownloadStationTaskCreateRequest,
 ): Promise<SynologyResponse<{}>> {
   if (options.file && options.uri) {
     throw new Error("cannot specify both a file and a uri argument to Create");
@@ -316,7 +316,7 @@ function Task_Create(
 function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
   function sideEffectCastNumbers<T extends object, K extends keyof T>(
     obj: T | null | undefined,
-    keys: (Extract<keyof T, T[K] extends number ? K : never>)[]
+    keys: (Extract<keyof T, T[K] extends number ? K : never>)[],
   ): void {
     if (obj != null) {
       keys.forEach(k => {
@@ -379,7 +379,7 @@ const Task = {
       additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
     }),
     r => ({ ...r, tasks: (r.tasks || []).map(fixTaskNumericTypes) }),
-    true
+    true,
   ),
   GetInfo: taskBuilder.makeGet<
     DownloadStationTaskGetInfoRequest,
@@ -392,7 +392,7 @@ const Task = {
   Create: Task_Create,
   Delete: taskBuilder.makeGet<DownloadStationTaskDeleteRequest, DownloadStationTaskActionResponse>(
     "delete",
-    o => ({ ...o, id: o.id.join(",") })
+    o => ({ ...o, id: o.id.join(",") }),
   ),
   Pause: taskBuilder.makeGet<
     DownloadStationTaskPauseResumeRequest,
@@ -404,7 +404,7 @@ const Task = {
   >("resume", o => ({ ...o, id: o.id.join(",") })),
   Edit: taskBuilder.makeGet<DownloadStationTaskEditRequest, DownloadStationTaskActionResponse>(
     "edit",
-    o => ({ ...o, id: o.id.join(",") })
+    o => ({ ...o, id: o.id.join(",") }),
   ),
 };
 

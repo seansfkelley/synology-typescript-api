@@ -19,7 +19,7 @@ const API_NAME = "SYNO.API.Info" as const;
 
 function Query(
   baseUrl: string,
-  options: InfoQueryRequest
+  options: InfoQueryRequest,
 ): Promise<SynologyResponse<InfoQueryResponse>> {
   return get(baseUrl, CGI_NAME, {
     ...options,

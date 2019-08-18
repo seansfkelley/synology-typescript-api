@@ -177,7 +177,7 @@ const List = {
       additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
     }),
     undefined,
-    true
+    true,
   ),
   list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>("list", o => ({
     ...o,
@@ -189,7 +189,7 @@ const List = {
       ...o,
       path: o.path.join(","),
       additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
-    })
+    }),
   ),
 };
 
