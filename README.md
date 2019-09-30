@@ -10,8 +10,8 @@
 
 `synology-typescript-api` is based off the [official Synology API documentation](https://www.synology.com/en-us/support/developer#tool), specifically:
 
-- DownloadStation ([documentation](https://global.download.synology.com/download/Document/DeveloperGuide/Synology_Download_Station_Web_API.pdf), [implementation](https://github.com/seansfkelley/synology-typescript-api/blob/master/src/rest/DownloadStation.ts))
-- FileStation ([documentation](https://global.download.synology.com/download/Document/DeveloperGuide/Synology_File_Station_API_Guide.pdf), [implementation](https://github.com/seansfkelley/synology-typescript-api/blob/master/src/rest/FileStation.ts))
+- DownloadStation ([documentation](https://global.download.synology.com/download/Document/Software/DeveloperGuide/Package/DownloadStation/All/enu/Synology_Download_Station_Web_API.pdf), [implementation](https://github.com/seansfkelley/synology-typescript-api/blob/master/src/rest/DownloadStation.ts))
+- FileStation ([documentation](https://global.download.synology.com/download/Document/Software/DeveloperGuide/Package/FileStation/All/enu/Synology_File_Station_API_Guide.pdf), [implementation](https://github.com/seansfkelley/synology-typescript-api/blob/master/src/rest/FileStation.ts))
 
 The various REST API groups are exported under the (nested) names from the documentation.
 
