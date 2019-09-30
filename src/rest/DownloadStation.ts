@@ -222,8 +222,7 @@ export interface DownloadStationTask {
   username: string;
   title: string;
   size: number;
-  // Can this be ErrorStatus, or will it just be error, with ErrorStatus specified in status_extra?
-  status: DownloadStationTaskNormalStatus | DownloadStationTaskErrorStatus;
+  status: DownloadStationTaskNormalStatus;
   status_extra?: {
     error_detail: DownloadStationTaskErrorStatus;
     unzip_progress?: number;
