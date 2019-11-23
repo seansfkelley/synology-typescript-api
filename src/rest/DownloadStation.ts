@@ -192,7 +192,7 @@ export const __taskErrorStatuses = {
   exceed_max_temp_size: true,
   extract_failed_disk_full: true,
   extract_failed_invalid_archive: true,
-  "extract_failed_quota_reached ": true,
+  extract_failed_quota_reached: true,
   extract_failed_wrong_password: true,
   extract_failed: true,
   file_not_exist: true,
