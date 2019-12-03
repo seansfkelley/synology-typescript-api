@@ -73,7 +73,8 @@ export interface FileStationListListShareRequest extends BaseRequest {
     | "time"
     | "perm"
     | "mount_point_type"
-    | "volume_status")[];
+    | "volume_status"
+  )[];
 }
 
 export interface FileStationSharedFolder {

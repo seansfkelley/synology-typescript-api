@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/synology-typescript-api
   docker:
-    - image: circleci/node:8.9.0
+    - image: circleci/node:12.10.0
 
 jobs:
   test:

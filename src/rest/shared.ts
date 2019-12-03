@@ -58,10 +58,12 @@ export async function get<O extends object>(
     timeout: undefined,
   })}`;
 
-  return (await Axios.get(url, {
-    timeout: request.timeout || DEFAULT_TIMEOUT,
-    withCredentials: false,
-  })).data;
+  return (
+    await Axios.get(url, {
+      timeout: request.timeout || DEFAULT_TIMEOUT,
+      withCredentials: false,
+    })
+  ).data;
 }
 
 export async function post<O extends object>(
@@ -92,10 +94,12 @@ export async function post<O extends object>(
 
   const url = `${baseUrl}/webapi/${cgi}.cgi`;
 
-  return (await Axios.post(url, formData, {
-    timeout: request.timeout || DEFAULT_TIMEOUT,
-    withCredentials: false,
-  })).data;
+  return (
+    await Axios.post(url, formData, {
+      timeout: request.timeout || DEFAULT_TIMEOUT,
+      withCredentials: false,
+    })
+  ).data;
 }
 
 export class ApiBuilder {
@@ -144,7 +148,7 @@ export class ApiBuilder {
   }
 
   private makeApiRequest(
-    method: (typeof get) | (typeof post),
+    method: typeof get | typeof post,
     methodName: string,
     preprocess?: (options: object) => object,
     postprocess?: (response: object) => object,

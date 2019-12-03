@@ -315,7 +315,7 @@ function Task_Create(
 function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
   function sideEffectCastNumbers<T extends object, K extends keyof T>(
     obj: T | null | undefined,
-    keys: (Extract<keyof T, T[K] extends number ? K : never>)[],
+    keys: Extract<keyof T, T[K] extends number ? K : never>[],
   ): void {
     if (obj != null) {
       keys.forEach(k => {
