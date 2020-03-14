@@ -8,7 +8,7 @@ import {
   SessionName,
   SynologyFailureResponse,
 } from "./rest";
-import { BaseRequest } from "./rest/shared";
+import type { BaseRequest } from "./rest/shared";
 
 const NO_PERMISSIONS_ERROR_CODE = 105;
 const SESSION_TIMEOUT_ERROR_CODE = 106;
