@@ -73,7 +73,7 @@ export async function post<O extends object>(
 ): Promise<SynologyResponse<O>> {
   const formData = new FormData();
 
-  Object.keys(request).forEach(k => {
+  Object.keys(request).forEach((k) => {
     const v = request[k];
     if (k !== "timeout" && v !== undefined && !isFormFile(v)) {
       // String() !== new String(). This produces lowercase-s strings, not capital-S Strings.
@@ -85,7 +85,7 @@ export async function post<O extends object>(
     formData.append("_sid", request.sid);
   }
 
-  Object.keys(request).forEach(k => {
+  Object.keys(request).forEach((k) => {
     const v = request[k];
     if (k !== "timeout" && v !== undefined && isFormFile(v)) {
       formData.append(k, v.content, v.filename);
@@ -153,8 +153,8 @@ export class ApiBuilder {
     preprocess?: (options: object) => object,
     postprocess?: (response: object) => object,
   ) {
-    preprocess = preprocess || (o => o);
-    postprocess = postprocess || (r => r);
+    preprocess = preprocess || ((o) => o);
+    postprocess = postprocess || ((r) => r);
     return async (baseUrl: string, sid: string, options?: object) => {
       const response = await method(baseUrl, this.cgiName, {
         ...preprocess!(options || {}),

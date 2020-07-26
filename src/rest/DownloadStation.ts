@@ -318,7 +318,7 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
     keys: Extract<keyof T, T[K] extends number ? K : never>[],
   ): void {
     if (obj != null) {
-      keys.forEach(k => {
+      keys.forEach((k) => {
         if (obj[k] != null) {
           // We don't expect any of these values to be greater than Number.MAX_SAFE_INTEGER, so this is safe.
           // If they are, so be it: you have a 9 quadrillion byte download, so you probably have other problems.
@@ -344,17 +344,17 @@ function fixTaskNumericTypes(task: DownloadStationTask): DownloadStationTask {
       "waiting_seconds",
     ]);
     if (output.additional.file) {
-      output.additional.file.forEach(f => {
+      output.additional.file.forEach((f) => {
         sideEffectCastNumbers(f, ["index", "size", "size_downloaded"]);
       });
     }
     if (output.additional.peer) {
-      output.additional.peer.forEach(p => {
+      output.additional.peer.forEach((p) => {
         sideEffectCastNumbers(p, ["progress", "speed_download", "speed_upload"]);
       });
     }
     if (output.additional.tracker) {
-      output.additional.tracker.forEach(t => {
+      output.additional.tracker.forEach((t) => {
         sideEffectCastNumbers(t, ["peers", "seeds", "update_timer"]);
       });
     }
@@ -373,17 +373,17 @@ const Task = {
   API_NAME: TASK_API_NAME,
   List: taskBuilder.makeGet<DownloadStationTaskListRequest, DownloadStationTaskListResponse>(
     "list",
-    o => ({
+    (o) => ({
       ...o,
       additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
     }),
-    r => ({ ...r, tasks: (r.tasks || []).map(fixTaskNumericTypes) }),
+    (r) => ({ ...r, tasks: (r.tasks || []).map(fixTaskNumericTypes) }),
     true,
   ),
   GetInfo: taskBuilder.makeGet<
     DownloadStationTaskGetInfoRequest,
     DownloadStationTaskGetInfoResponse
-  >("getinfo", o => ({
+  >("getinfo", (o) => ({
     ...o,
     id: o.id.join(","),
     additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
@@ -391,19 +391,19 @@ const Task = {
   Create: Task_Create,
   Delete: taskBuilder.makeGet<DownloadStationTaskDeleteRequest, DownloadStationTaskActionResponse>(
     "delete",
-    o => ({ ...o, id: o.id.join(",") }),
+    (o) => ({ ...o, id: o.id.join(",") }),
   ),
   Pause: taskBuilder.makeGet<
     DownloadStationTaskPauseResumeRequest,
     DownloadStationTaskActionResponse
-  >("pause", o => ({ ...o, id: o.id.join(",") })),
+  >("pause", (o) => ({ ...o, id: o.id.join(",") })),
   Resume: taskBuilder.makeGet<
     DownloadStationTaskPauseResumeRequest,
     DownloadStationTaskActionResponse
-  >("resume", o => ({ ...o, id: o.id.join(",") })),
+  >("resume", (o) => ({ ...o, id: o.id.join(",") })),
   Edit: taskBuilder.makeGet<DownloadStationTaskEditRequest, DownloadStationTaskActionResponse>(
     "edit",
-    o => ({ ...o, id: o.id.join(",") }),
+    (o) => ({ ...o, id: o.id.join(",") }),
   ),
 };
 

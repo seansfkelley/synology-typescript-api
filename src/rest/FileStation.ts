@@ -173,20 +173,20 @@ const List = {
     FileStationListListShareResponse
   >(
     "list_share",
-    o => ({
+    (o) => ({
       ...o,
       additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
     }),
     undefined,
     true,
   ),
-  list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>("list", o => ({
+  list: listBuilder.makeGet<FileStationListListRequest, FileStationFileList>("list", (o) => ({
     ...o,
     additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
   })),
   getinfo: listBuilder.makeGet<FileStationListGetInfoRequest, FileStationListGetInfoResponse>(
     "getinfo",
-    o => ({
+    (o) => ({
       ...o,
       path: o.path.join(","),
       additional: o && o.additional && o.additional.length ? o.additional.join(",") : undefined,
