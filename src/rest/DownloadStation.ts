@@ -19,7 +19,7 @@ export interface DownloadStationInfoConfig {
   http_max_download: number;
   ftp_max_download: number;
   emule_enabled: boolean;
-  unzip_service_enabled: number;
+  unzip_service_enabled: boolean;
   default_destination: string;
   emule_default_destination: string;
 }

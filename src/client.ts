@@ -240,6 +240,10 @@ export class ApiClient {
       };
 
       try {
+        // `await`s in this block aren't necessary to adhere to the type signature, but it changes
+        // who's responsible for handling the errors. Currently, errors unhandled by lower levels
+        // are bubbled up to the outermost `catch`.
+
         const loginResponse = await this.maybeLogin();
 
         if (this.settingsVersion !== versionAtInit) {
