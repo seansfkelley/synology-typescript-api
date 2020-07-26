@@ -29,7 +29,7 @@ export interface ApiClientSettings {
   session?: SessionName;
 }
 
-const SETTING_NAME_KEYS = (function() {
+const SETTING_NAME_KEYS = (function () {
   const _settingNames: Record<keyof ApiClientSettings, true> = {
     baseUrl: true,
     account: true,
@@ -87,7 +87,7 @@ export class ApiClient {
   public updateSettings(settings: ApiClientSettings) {
     if (
       settings != null &&
-      (this.settings == null || SETTING_NAME_KEYS.some(k => settings[k] !== this.settings[k]))
+      (this.settings == null || SETTING_NAME_KEYS.some((k) => settings[k] !== this.settings[k]))
     ) {
       this.settingsVersion++;
       this.settings = settings;
@@ -103,14 +103,16 @@ export class ApiClient {
     let isSubscribed = true;
     return () => {
       if (isSubscribed) {
-        this.onSettingsChangeListeners = this.onSettingsChangeListeners.filter(l => l !== listener);
+        this.onSettingsChangeListeners = this.onSettingsChangeListeners.filter(
+          (l) => l !== listener,
+        );
         isSubscribed = false;
       }
     };
   }
 
   private isFullyConfigured() {
-    return SETTING_NAME_KEYS.every(k => {
+    return SETTING_NAME_KEYS.every((k) => {
       const v = this.settings[k];
       return v != null && v.length > 0;
     });
@@ -226,10 +228,11 @@ export class ApiClient {
     ): Promise<SynologyResponse<U> | ConnectionFailure> => {
       const versionAtInit = this.settingsVersion;
 
-      const maybeLogoutAndRetry = (response: SynologyFailureResponse) => {
+      const maybeLogoutAndRetry = (response: ConnectionFailure | SynologyFailureResponse) => {
         if (
           shouldRetryRoutineFailures &&
-          (response.error.code === SESSION_TIMEOUT_ERROR_CODE ||
+          (isConnectionFailure(response) ||
+            response.error.code === SESSION_TIMEOUT_ERROR_CODE ||
             response.error.code === NO_PERMISSIONS_ERROR_CODE)
         ) {
           this.loginPromise = undefined;
@@ -248,9 +251,7 @@ export class ApiClient {
 
         if (this.settingsVersion !== versionAtInit) {
           return await wrappedFunction(options);
-        } else if (isConnectionFailure(loginResponse)) {
-          return loginResponse;
-        } else if (!loginResponse.success) {
+        } else if (isConnectionFailure(loginResponse) || !loginResponse.success) {
           return await maybeLogoutAndRetry(loginResponse);
         } else {
           const response = await fn(this.settings.baseUrl!, loginResponse.data.sid, options);
