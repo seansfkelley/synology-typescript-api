@@ -213,15 +213,7 @@ export class ApiClient {
 
   private proxy<T, U>(
     fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>,
-  ): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
-  private proxy<T, U>(
-    fn: (baseUrl: string, sid: string, options?: T) => Promise<SynologyResponse<U>>,
-    optional: true,
-  ): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure>;
-
-  private proxy<T, U>(
-    fn: (baseUrl: string, sid: string, options: T) => Promise<SynologyResponse<U>>,
-  ) {
+  ): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure> {
     const wrappedFunction = async (
       options: T,
       shouldRetryRoutineFailures: boolean = true,
@@ -272,6 +264,12 @@ export class ApiClient {
     return wrappedFunction;
   }
 
+  private proxyOptionalArgs<T, U>(
+    fn: (baseUrl: string, sid: string, options?: T) => Promise<SynologyResponse<U>>,
+  ): (options?: T) => Promise<SynologyResponse<U> | ConnectionFailure> {
+    return this.proxy(fn);
+  }
+
   public Auth = {
     Login: this.maybeLogin,
     Logout: this.maybeLogout,
@@ -279,19 +277,19 @@ export class ApiClient {
 
   public DownloadStation = {
     Info: {
-      GetInfo: this.proxy(DownloadStation.Info.GetInfo, true),
-      GetConfig: this.proxy(DownloadStation.Info.GetConfig, true),
+      GetInfo: this.proxyOptionalArgs(DownloadStation.Info.GetInfo),
+      GetConfig: this.proxyOptionalArgs(DownloadStation.Info.GetConfig),
       SetServerConfig: this.proxy(DownloadStation.Info.SetServerConfig),
     },
     Schedule: {
-      GetConfig: this.proxy(DownloadStation.Schedule.GetConfig, true),
+      GetConfig: this.proxyOptionalArgs(DownloadStation.Schedule.GetConfig),
       SetConfig: this.proxy(DownloadStation.Schedule.SetConfig),
     },
     Statistic: {
-      GetInfo: this.proxy(DownloadStation.Statistic.GetInfo, true),
+      GetInfo: this.proxyOptionalArgs(DownloadStation.Statistic.GetInfo),
     },
     Task: {
-      List: this.proxy(DownloadStation.Task.List, true),
+      List: this.proxyOptionalArgs(DownloadStation.Task.List),
       GetInfo: this.proxy(DownloadStation.Task.GetInfo),
       Create: this.proxy(DownloadStation.Task.Create),
       Delete: this.proxy(DownloadStation.Task.Delete),
@@ -306,7 +304,7 @@ export class ApiClient {
       get: this.proxy(FileStation.Info.get),
     },
     List: {
-      list_share: this.proxy(FileStation.List.list_share, true),
+      list_share: this.proxyOptionalArgs(FileStation.List.list_share),
       list: this.proxy(FileStation.List.list),
       getinfo: this.proxy(FileStation.List.getinfo),
     },
