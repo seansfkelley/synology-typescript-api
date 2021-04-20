@@ -270,9 +270,28 @@ export class ApiClient {
     return this.proxy(fn);
   }
 
+  private proxyWithoutAuth<T, U>(
+    fn: (baseUrl: string, options: T) => Promise<SynologyResponse<U>>,
+  ): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure> {
+    return async (options: T) => {
+      if (!this.isFullyConfigured()) {
+        const response: ConnectionFailure = {
+          type: "missing-config",
+        };
+        return response;
+      } else {
+        return fn(this.settings.baseUrl!, options);
+      }
+    };
+  }
+
   public Auth = {
     Login: this.maybeLogin,
     Logout: this.maybeLogout,
+  };
+
+  public Info = {
+    Query: this.proxyWithoutAuth(Info.Query),
   };
 
   public DownloadStation = {
