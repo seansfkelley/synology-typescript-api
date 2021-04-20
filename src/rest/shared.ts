@@ -42,7 +42,7 @@ export interface SynologyApiRequest {
   method: string;
   sid?: string;
   timeout?: number;
-  [key: string]: string | number | FormFile | undefined;
+  [key: string]: string | number | boolean | FormFile | undefined;
 }
 
 const DEFAULT_TIMEOUT = 60000;

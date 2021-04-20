@@ -2,6 +2,7 @@ import {
   Auth,
   AuthLoginResponse,
   DownloadStation,
+  DownloadStation2,
   FileStation,
   Info,
   SynologyResponse,
@@ -315,6 +316,12 @@ export class ApiClient {
       Pause: this.proxy(DownloadStation.Task.Pause),
       Resume: this.proxy(DownloadStation.Task.Resume),
       Edit: this.proxy(DownloadStation.Task.Edit),
+    },
+  };
+
+  public DownloadStation2 = {
+    Task: {
+      Create: this.proxy(DownloadStation2.Task.Create),
     },
   };
 
