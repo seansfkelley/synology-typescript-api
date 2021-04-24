@@ -98,6 +98,9 @@ export async function post<O extends object>(
     await Axios.post(url, formData, {
       timeout: request.timeout || DEFAULT_TIMEOUT,
       withCredentials: false,
+      params: {
+        _sid: request.sid,
+      },
     })
   ).data;
 }
