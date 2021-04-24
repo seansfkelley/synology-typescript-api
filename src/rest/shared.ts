@@ -1,5 +1,12 @@
-import Axios from "axios";
 import { stringify } from "query-string";
+
+export class BadResponseError extends Error {
+  constructor(public response: Response) {
+    super();
+  }
+}
+export class TimeoutError extends Error {}
+export class NetworkError extends Error {}
 
 export const SessionName = {
   DownloadStation: "DownloadStation" as const,
@@ -47,6 +54,40 @@ export interface SynologyApiRequest {
 
 const DEFAULT_TIMEOUT = 60000;
 
+async function doFetch(
+  url: string,
+  init: RequestInit,
+  timeout: number | undefined,
+): Promise<unknown> {
+  const abortController = new AbortController();
+  const timeoutTimer = setTimeout(() => {
+    abortController.abort();
+  }, timeout ?? DEFAULT_TIMEOUT);
+
+  try {
+    const response = await fetch(url, {
+      ...init,
+      credentials: "omit",
+      signal: abortController.signal,
+    });
+    if (!response.ok) {
+      throw new BadResponseError(response);
+    } else {
+      return response.json();
+    }
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new TimeoutError();
+    } else if (/networkerror/i.test(e?.message)) {
+      throw new NetworkError();
+    } else {
+      throw e;
+    }
+  } finally {
+    clearTimeout(timeoutTimer);
+  }
+}
+
 export async function get<O extends object>(
   baseUrl: string,
   cgi: string,
@@ -58,12 +99,7 @@ export async function get<O extends object>(
     timeout: undefined,
   })}`;
 
-  return (
-    await Axios.get(url, {
-      timeout: request.timeout || DEFAULT_TIMEOUT,
-      withCredentials: false,
-    })
-  ).data;
+  return doFetch(url, { method: "GET" }, request.timeout) as Promise<SynologyResponse<O>>;
 }
 
 export async function post<O extends object>(
@@ -92,17 +128,11 @@ export async function post<O extends object>(
     }
   });
 
-  const url = `${baseUrl}/webapi/${cgi}.cgi`;
+  const url = `${baseUrl}/webapi/${cgi}.cgi?${stringify({ _sid: request.sid })}`;
 
-  return (
-    await Axios.post(url, formData, {
-      timeout: request.timeout || DEFAULT_TIMEOUT,
-      withCredentials: false,
-      params: {
-        _sid: request.sid,
-      },
-    })
-  ).data;
+  return doFetch(url, { method: "POST", body: formData }, request.timeout) as Promise<
+    SynologyResponse<O>
+  >;
 }
 
 export class ApiBuilder {

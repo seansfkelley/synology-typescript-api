@@ -9,7 +9,7 @@ import {
   SessionName,
   SynologyFailureResponse,
 } from "./rest";
-import type { BaseRequest } from "./rest/shared";
+import { BaseRequest, BadResponseError, TimeoutError, NetworkError } from "./rest/shared";
 
 const NO_PERMISSIONS_ERROR_CODE = 105;
 const SESSION_TIMEOUT_ERROR_CODE = 106;
@@ -55,12 +55,11 @@ export type ConnectionFailure =
 
 const ConnectionFailure = {
   from: (error: any): ConnectionFailure => {
-    if (error && error.response && error.response.status === 400) {
+    if (error instanceof BadResponseError && error.response.status === 400) {
       return { type: "probable-wrong-protocol", error };
-    } else if (error && error.message === "Network Error") {
+    } else if (error instanceof NetworkError) {
       return { type: "probable-wrong-url-or-no-connection-or-cert-error", error };
-    } else if (error && /timeout of \d+ms exceeded/.test(error.message)) {
-      // This is a best-effort which I expect to start silently falling back onto 'unknown error' at some point in the future.
+    } else if (error instanceof TimeoutError) {
       return { type: "timeout", error };
     } else {
       return { type: "unknown", error };
