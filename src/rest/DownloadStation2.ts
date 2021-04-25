@@ -43,14 +43,15 @@ function Task_Create(
   options: DownloadStation2TaskCreateRequest,
 ): Promise<SynologyResponse<DownloadStation2TaskCreateResponse>> {
   const commonOptions = {
+    // These three must come first. I believe they also must be in this order.
+    api: TASK_API_NAME,
+    method: "create",
+    version: 2,
     ...options,
     type: JSON.stringify(options.type),
     // undefined means default location configured on the NAS, which is represented by empty string
     destination: JSON.stringify(options.destination ?? ""),
     create_list: JSON.stringify(options.create_list ?? false),
-    api: TASK_API_NAME,
-    version: 2,
-    method: "create",
     sid,
     file: undefined,
     url: undefined,
@@ -60,20 +61,19 @@ function Task_Create(
   if (options.type === "file") {
     return post(baseUrl, TASK_CGI_NAME, {
       ...commonOptions,
-      // TODO: Check that this works.
       file: '["torrent"]',
       torrent: options.file,
     });
   } else if (options.type === "url") {
     return get(baseUrl, TASK_CGI_NAME, {
       ...commonOptions,
-      // TODO: Check that this works.
-      url: options.url && options.url.length ? options.url.join(",") : undefined,
+      url: JSON.stringify(options.url),
     });
   } else if (options.type === "local") {
     return get(baseUrl, TASK_CGI_NAME, {
       ...commonOptions,
-      local_path: options.local_path,
+      // TODO: Unsure if this works. Documentation isn't clear on how it's intended to work.
+      local_path: JSON.stringify(options.local_path),
     });
   } else {
     return Promise.reject(new Error(`illegal type "${(options as any)?.type}"`));
