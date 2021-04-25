@@ -54,7 +54,7 @@ export interface SynologyApiRequest {
 
 const DEFAULT_TIMEOUT = 60000;
 
-async function doFetch(
+export async function fetchWithErrorHandling(
   url: string,
   init: RequestInit,
   timeout: number | undefined,
@@ -99,7 +99,9 @@ export async function get<O extends object>(
     timeout: undefined,
   })}`;
 
-  return doFetch(url, { method: "GET" }, request.timeout) as Promise<SynologyResponse<O>>;
+  return fetchWithErrorHandling(url, { method: "GET" }, request.timeout) as Promise<
+    SynologyResponse<O>
+  >;
 }
 
 export async function post<O extends object>(
@@ -130,9 +132,11 @@ export async function post<O extends object>(
 
   const url = `${baseUrl}/webapi/${cgi}.cgi?${stringify({ _sid: request.sid })}`;
 
-  return doFetch(url, { method: "POST", body: formData }, request.timeout) as Promise<
-    SynologyResponse<O>
-  >;
+  return fetchWithErrorHandling(
+    url,
+    { method: "POST", body: formData },
+    request.timeout,
+  ) as Promise<SynologyResponse<O>>;
 }
 
 export class ApiBuilder {
