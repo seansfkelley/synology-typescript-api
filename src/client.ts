@@ -14,20 +14,11 @@ import { BaseRequest, BadResponseError, TimeoutError, NetworkError } from "./res
 const NO_PERMISSIONS_ERROR_CODE = 105;
 const SESSION_TIMEOUT_ERROR_CODE = 106;
 
-export interface ExtraLoginInfo {
-  extra: {
-    // If we're using version 1 of the login API for compatibility reasons, we will get Set-Cookie headers that we
-    // don't want, which will override the existing login session in the normal browing space. We should warn our
-    // callers about this!
-    isLegacyLogin: boolean;
-  };
-}
-
 export interface ApiClientSettings {
-  baseUrl?: string;
-  account?: string;
-  passwd?: string;
-  session?: SessionName;
+  baseUrl: string;
+  account: string;
+  passwd: string;
+  session: SessionName;
 }
 
 const SETTING_NAME_KEYS = (function () {
@@ -75,20 +66,15 @@ export function isConnectionFailure(
   );
 }
 
-type LoginResponse = SynologyResponse<AuthLoginResponse & ExtraLoginInfo>;
-
 export class ApiClient {
-  private loginPromise: Promise<LoginResponse> | undefined;
+  private loginPromise: Promise<SynologyResponse<AuthLoginResponse>> | undefined;
   private settingsVersion: number = 0;
   private onSettingsChangeListeners: (() => void)[] = [];
 
-  constructor(private settings: ApiClientSettings) {}
+  constructor(private settings: Partial<ApiClientSettings>) {}
 
-  public updateSettings(settings: ApiClientSettings) {
-    if (
-      settings != null &&
-      (this.settings == null || SETTING_NAME_KEYS.some((k) => settings[k] !== this.settings[k]))
-    ) {
+  public updateSettings(settings: Partial<ApiClientSettings>) {
+    if (SETTING_NAME_KEYS.some((k) => settings[k] !== this.settings[k])) {
       this.settingsVersion++;
       this.settings = settings;
       this.maybeLogout();
@@ -111,51 +97,32 @@ export class ApiClient {
     };
   }
 
-  private isFullyConfigured() {
-    return SETTING_NAME_KEYS.every((k) => {
-      const v = this.settings[k];
-      return v != null && v.length > 0;
-    });
-  }
-
-  private async login(request: BaseRequest | undefined): Promise<LoginResponse> {
-    const cachedSettings = this.settings;
-    const apiVersions = await Info.Query(cachedSettings.baseUrl!, {
-      query: [Auth.API_NAME],
-    });
-    const authApiVersion: 1 | 4 =
-      apiVersions.success && apiVersions.data[Auth.API_NAME].maxVersion >= 4 ? 4 : 1;
-    const response = await Auth.Login(cachedSettings.baseUrl!, {
-      ...request,
-      account: cachedSettings.account!,
-      passwd: cachedSettings.passwd!,
-      session: cachedSettings.session!,
-      version: authApiVersion,
-    });
-
-    if (response.success) {
-      return {
-        ...response,
-        data: {
-          ...response.data,
-          extra: {
-            isLegacyLogin: authApiVersion === 1,
-          },
-        },
-      };
+  private getValidatedSettings() {
+    if (
+      SETTING_NAME_KEYS.every((k) => {
+        const v = this.settings[k];
+        return v != null && v.length > 0;
+      })
+    ) {
+      return this.settings as ApiClientSettings;
     } else {
-      return response;
+      return undefined;
     }
   }
 
   private maybeLogin = async (request?: BaseRequest) => {
-    if (!this.isFullyConfigured()) {
+    const settings = this.getValidatedSettings();
+    if (settings == null) {
       const failure: ConnectionFailure = {
         type: "missing-config",
       };
       return failure;
     } else if (!this.loginPromise) {
-      this.loginPromise = this.login(request);
+      const { baseUrl, ...restSettings } = settings;
+      this.loginPromise = Auth.Login(baseUrl, {
+        ...request,
+        ...restSettings,
+      });
     }
 
     try {
@@ -176,18 +143,19 @@ export class ApiClient {
     request?: BaseRequest,
   ): Promise<SynologyResponse<{}> | ConnectionFailure | "not-logged-in"> => {
     const stashedLoginPromise = this.loginPromise;
+    const settings = this.getValidatedSettings();
     this.loginPromise = undefined;
 
     if (!stashedLoginPromise) {
       return "not-logged-in" as const;
-    } else if (!this.isFullyConfigured()) {
+    } else if (settings == null) {
       const failure: ConnectionFailure = {
         type: "missing-config",
       };
       return failure;
     } else {
-      let response: LoginResponse;
-      const { baseUrl, session } = this.settings;
+      let response: SynologyResponse<AuthLoginResponse>;
+      const { baseUrl, session } = settings;
 
       try {
         response = await stashedLoginPromise;
@@ -197,10 +165,10 @@ export class ApiClient {
 
       if (response.success) {
         try {
-          return await Auth.Logout(baseUrl!, {
+          return await Auth.Logout(baseUrl, {
             ...request,
             sid: response.data.sid,
-            session: session!,
+            session: session,
           });
         } catch (e) {
           return ConnectionFailure.from(e);
@@ -274,13 +242,14 @@ export class ApiClient {
     fn: (baseUrl: string, options: T) => Promise<SynologyResponse<U>>,
   ): (options: T) => Promise<SynologyResponse<U> | ConnectionFailure> {
     return async (options: T) => {
-      if (!this.isFullyConfigured()) {
+      const settings = this.getValidatedSettings();
+      if (settings == null) {
         const response: ConnectionFailure = {
           type: "missing-config",
         };
         return response;
       } else {
-        return fn(this.settings.baseUrl!, options);
+        return fn(settings.baseUrl, options);
       }
     };
   }
