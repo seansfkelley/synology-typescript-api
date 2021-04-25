@@ -54,7 +54,7 @@ export interface SynologyApiRequest {
 
 const DEFAULT_TIMEOUT = 60000;
 
-export async function fetchWithErrorHandling(
+async function fetchWithErrorHandling(
   url: string,
   init: RequestInit,
   timeout: number | undefined,
