@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "module": "es2015",
+    "module": "ES2020",
     "moduleResolution": "node",
-    "target": "es2017",
+    "target": "ES2020",
     "rootDir": "src",
     "outDir": "lib",
     "sourceMap": true,
