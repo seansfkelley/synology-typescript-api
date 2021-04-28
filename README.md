@@ -2,6 +2,10 @@
 
 > A Typescript implementation of a Promise-based API for the Synology DiskStation API.
 
+## Deprecation Notice
+
+This project is no longer maintained. It has since been inlined into [Synology Download Manager](https://github.com/seansfkelley/synology-download-manager).
+
 ## Usage
 
 `synology-typescript-api` is published to npm as an ES6 module, so you'll have to use an environment or build tools that understand `import`/`export` statements.
